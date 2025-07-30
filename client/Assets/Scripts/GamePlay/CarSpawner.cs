@@ -9,7 +9,7 @@ public class CarSpawner : MonoBehaviour
     [SerializeField] private float minSpawnInterval = 1f; // 최소 스폰 간격
     [SerializeField] private float maxSpawnInterval = 3f; // 최대 스폰 간격
     [SerializeField] private float minCarSpeed = 10f; // 최소 차량 속도
-    [SerializeField] private float maxCarSpeed = 18f; // 최대 차량 속도
+    [SerializeField] private float maxCarSpeed = 60f; // 최대 차량 속도
 
     void Start()
     {

@@ -7,7 +7,7 @@ public class InputHandler : MonoBehaviour
     [SerializeField] private PlayerCarController playerCarController;
 
     private InputSystem_Actions _playerControls;
-
+    private InputAction _inputAction;
     private void Awake()
     {
         _playerControls = new InputSystem_Actions();
@@ -18,6 +18,7 @@ public class InputHandler : MonoBehaviour
         _playerControls.Player.Enable();
         // 'Move' 액션이 수행될 때 HandleMove 메서드를 호출하도록 등록합니다.
         _playerControls.Player.Move.performed += HandleMove;
+        _inputAction = _playerControls.Player.Move;
     }
 
     private void OnDisable()
@@ -33,6 +34,15 @@ public class InputHandler : MonoBehaviour
         
         // 커맨드를 생성하고 즉시 실행합니다.
         ICommand moveCommand = new MoveCommand(playerCarController, moveInput);
+        moveCommand.Execute();
+    }
+
+    private void Update()
+    {
+        Vector2 moveInput = _inputAction.ReadValue<Vector2>();
+        
+        // 커맨드를 생성하고 즉시 실행합니다.
+        ICommand moveCommand = new ThrustCommand(playerCarController, moveInput);
         moveCommand.Execute();
     }
 }

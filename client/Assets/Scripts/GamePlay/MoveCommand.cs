@@ -24,5 +24,32 @@ public class MoveCommand : ICommand
         {
             _playerCar.MoveRight();
         }
+       
+    }
+}
+
+public class ThrustCommand : ICommand
+{
+    private PlayerCarController _playerCar;
+    private Vector2 _direction;
+
+    public ThrustCommand(PlayerCarController playerCar, Vector2 direction)
+    {
+        _playerCar = playerCar;
+        _direction = direction;
+    }
+
+    public void Execute()
+    {
+        if (_direction.y > 0)
+        {
+            Debug.Log("Command Up");
+            _playerCar.SpeedUp();
+        }
+        else if (_direction.y < 0)
+        {
+            Debug.Log("Command Down");
+            _playerCar.SpeedDown();
+        }
     }
 }

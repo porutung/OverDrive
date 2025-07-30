@@ -46,6 +46,6 @@ public class ChaseCamera : MonoBehaviour
         transform.position = Vector3.SmoothDamp(transform.position, desiredPosition, ref _velocity, followSmoothTime);
         
         // 5. 항상 차를 바라보도록 설정합니다.
-        transform.LookAt(target);
+        //transform.LookAt(target);
     }
 }

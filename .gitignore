@@ -77,3 +77,5 @@ client/Library
 client/Logs
 client/UserSettings
 client/Temp
+client/obj
+client/.idea
