@@ -13,9 +13,10 @@ public class CameraSpeedEffect : MonoBehaviour
 
     // (선택 사항) 카메라 위치 오프셋 설정
     // [Header("카메라 위치 오프셋")]
-    // [SerializeField] private Vector3 normalOffset = new Vector3(0, 5, -10); // 일반 주행 시 카메라 상대 위치
-    // [SerializeField] private Vector3 slipstreamOffset = new Vector3(0, 4, -12); // 슬립스트림 시 카메라 상대 위치
-    // [SerializeField] private float offsetChangeSpeed = 5f; // 오프셋 변경 속도
+     //[SerializeField] private Vector3 normalOffset = new Vector3(0, 5, -10); // 일반 주행 시 카메라 상대 위치
+     [SerializeField] private Vector3 normalOffset = new Vector3(0, 2f, -5f); // 차와의 기본 거리
+     [SerializeField] private Vector3 slipstreamOffset = new Vector3(0, 4, -12); // 슬립스트림 시 카메라 상대 위치
+     [SerializeField] private float offsetChangeSpeed = 5f; // 오프셋 변경 속도
 
 
     void Start()
@@ -37,7 +38,7 @@ public class CameraSpeedEffect : MonoBehaviour
             mainCamera.fieldOfView = normalFOV;
         }
         // 초기 위치 설정 (선택 사항)
-        // transform.localPosition = normalOffset;
+        transform.localPosition = normalOffset;
     }
 
     void Update()
@@ -64,12 +65,13 @@ public class CameraSpeedEffect : MonoBehaviour
         mainCamera.fieldOfView = Mathf.Lerp(mainCamera.fieldOfView, targetFOV, Time.deltaTime * fovChangeSpeed);
 
         // (선택 사항) 카메라 위치 오프셋 변경
-        // Vector3 targetOffset = normalOffset;
-        // if (playerCarController.currentSpeed >= playerCarController.slipstreamSpeed - 0.5f)
-        // {
-        //     targetOffset = slipstreamOffset;
-        // }
-        // transform.localPosition = Vector3.Lerp(transform.localPosition, targetOffset, Time.deltaTime * offsetChangeSpeed);
+         Vector3 targetOffset = normalOffset;
+         //if (playerCarController.currentSpeed >= playerCarController.slipstreamSpeed - 0.5f)
+         if(playerCarController.isSlipstream == true)
+         {
+             targetOffset = slipstreamOffset;
+         }
+         transform.localPosition = Vector3.Lerp(transform.localPosition, targetOffset, Time.deltaTime * offsetChangeSpeed);
 
         // (선택 사항) 카메라가 플레이어를 따라가도록 설정
         // 이 스크립트를 카메라 오브젝트에 붙이고, 카메라를 플레이어의 자식으로 두지 않았다면

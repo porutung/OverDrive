@@ -35,7 +35,7 @@ public class CarSpawner : MonoBehaviour
         GameObject prefabToSpawn = otherCarPrefabs[Random.Range(0, otherCarPrefabs.Length)];
         float spawnXPosition = laneXPositions[Random.Range(0, laneXPositions.Length)];
         
-        Vector3 spawnPosition = new Vector3(spawnXPosition, 0.5f, spawnZPosition); // y는 차량 높이에 맞게 조절
+        Vector3 spawnPosition = new Vector3(spawnXPosition, 0.0f, spawnZPosition); // y는 차량 높이에 맞게 조절
 
         // 차량 생성
         GameObject spawnedCar = Instantiate(prefabToSpawn, spawnPosition, Quaternion.identity);

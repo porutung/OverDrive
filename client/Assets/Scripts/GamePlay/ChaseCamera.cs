@@ -6,7 +6,7 @@ public class ChaseCamera : MonoBehaviour
     public Transform target; // 따라갈 자동차의 Transform
 
     [Header("카메라 오프셋")]
-    public Vector3 offset = new Vector3(0, 2f, -5f); // 차와의 기본 거리
+    public Vector3 offset = new Vector3(0f, 2f, -5f); // 차와의 기본 거리
 
     [Header("추적 속도")]
     [Tooltip("전후/상하 추적의 부드러움 (값이 작을수록 빨리 따라감)")]

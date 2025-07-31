@@ -17,6 +17,9 @@ public class PlayerCarController : MonoBehaviour
     public float currentSpeed; // 현재 속도 (RoadScroller가 참조)
     [SerializeField] private float accelerationRate = 5f; // <--- 새롭게 추가된 부분: 속도 가감 속도
     
+    [Header("틸트(기울기)=true or Yaw 회전 효과 선택=false")]
+    [SerializeField] private bool isTiltOrYaw = false;
+    
     [Header("틸트(기울기) 효과")]
     [SerializeField] private float tiltAngle = 15f; // 최대 기울기 각도
     [SerializeField] private float tiltSpeed = 10f; // 기울기 변화 속도
@@ -41,9 +44,15 @@ public class PlayerCarController : MonoBehaviour
     {
         CheckForSlipstream();
         UpdatePosition();
-        UpdateTilt();
-       // [수정] 호출하는 메서드 이름을 변경합니다.
-       //UpdateYawRotation();
+        if (isTiltOrYaw)
+        {
+            UpdateTilt();
+        }
+        else
+        {
+            // [수정] 호출하는 메서드 이름을 변경합니다.
+            UpdateYawRotation();     
+        }       
     }
 
     // 왼쪽으로 이동
