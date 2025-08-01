@@ -1,7 +1,21 @@
 using UnityEngine;
+using System.Collections;
+using TMPro;
 
 public class PlayerCarController : MonoBehaviour
 {
+    public ChaseCamera mainCamera; // 인스펙터에서 메인 카메라를 연결해줘야 함
+    public TextMeshProUGUI speedText;
+    
+    [Header("차량 성능 데이터")]
+    [Tooltip("이 차량에 적용할 성능 스펙 파일을 연결해주세요.")]
+    public CarStats carStats;
+    
+    // --- 시각적 모델 연결 ---
+    [Header("오브젝트 연결")]
+    [Tooltip("물리 계산과 분리된, 눈에 보이는 차의 3D 모델 트랜스폼")]
+    public Transform carVisualModel;
+    
     [Header("차선 설정")]
     [SerializeField] private float[] laneXPositions = { -2.5f, 0f, 2.5f }; // 3개 차선의 x좌표
     [SerializeField] private float laneChangeSpeed = 15f; // 차선 변경 속도
@@ -9,13 +23,18 @@ public class PlayerCarController : MonoBehaviour
 
     [Header("속도 및 슬립스트림")]
     public bool isSlipstream = false;
-    public float normalSpeed = 20f; // 기본 속도
-    public float slipstreamSpeed = 30f; // 슬립스트림 시 속도
+    public bool IsInSlipstream() { return isSlipstream; }
     
-    [SerializeField] private float slipstreamDistance = 10f; // 슬립스트림 발동 거리
-    [SerializeField] private LayerMask otherCarLayer; // 다른 차들의 레이어
+    // --- 자동 가속/감속 로직 변수 ---
+    private enum CarState { Accelerating, Decelerating }
+    private CarState currentState;
+    
     public float currentSpeed; // 현재 속도 (RoadScroller가 참조)
     [SerializeField] private float accelerationRate = 5f; // <--- 새롭게 추가된 부분: 속도 가감 속도
+    
+    [Header("충돌 물리 효과")]
+    [Tooltip("충돌 시 상대방을 위로 띄우는 힘의 크기")]
+    public float upwardImpactModifier = 1.5f;
     
     [Header("틸트(기울기)=true or Yaw 회전 효과 선택=false")]
     [SerializeField] private bool isTiltOrYaw = false;
@@ -31,19 +50,37 @@ public class PlayerCarController : MonoBehaviour
     
     private Vector3 _targetPosition;
     private Quaternion _targetRotation;
+
+    private Coroutine _carShakeCoroutine = null;
     
     void Start()
-    {
-        currentSpeed = normalSpeed;
+    {        
+        // 차선 이동 관련 초기화
         _targetPosition = transform.position;
         _targetPosition.x = laneXPositions[_currentLaneIndex];
         _targetRotation = transform.rotation;
+        
+        // 자동 가속 관련 초기화
+        currentState = CarState.Accelerating;
     }
 
     void Update()
     {
-        CheckForSlipstream();
+        // 1. 슬립스트림 조건 확인 (가속 상태일 때만)
+        if (currentState == CarState.Accelerating)
+        {
+            CheckForSlipstream();
+        }
+        else
+        {
+            isSlipstream = false; // 감속 중에는 슬립스트림 비활성화
+        }
+        
+        //  2. 자동 가속/감속 상태 관리
+        HandleAccelerationState();
+        
         UpdatePosition();
+        
         if (isTiltOrYaw)
         {
             UpdateTilt();
@@ -52,8 +89,27 @@ public class PlayerCarController : MonoBehaviour
         {
             // [수정] 호출하는 메서드 이름을 변경합니다.
             UpdateYawRotation();     
-        }       
+        }      
+        // 디버그용 로그 (슬립스트림 상태 표시)
+        //Debug.Log($"State: {currentState}, Speed: {currentSpeed:F1}, Slipstream: {isSlipstream}");
+        speedText.text = string.Format($"{currentSpeed:F0}km/h");
     }
+    private void HandleAccelerationState()
+    {
+        switch (currentState)
+        {
+            case CarState.Accelerating:
+                // --- 슬립스트림 여부에 따라 목표 속도 변경 ---
+                float targetSpeed = isSlipstream ? (carStats.maxSpeed + carStats.slipstreamMaxSpeed) : carStats.maxSpeed;
+                currentSpeed = Mathf.MoveTowards(currentSpeed, targetSpeed, carStats.acceleration * Time.deltaTime);
+                // ------------------------------------------
+                break;
+            case CarState.Decelerating:
+                currentSpeed = Mathf.MoveTowards(currentSpeed, 0f, carStats.decelerationAfterCrash * Time.deltaTime);
+                break;
+        }
+    }
+    // -------------------------
 
     // 왼쪽으로 이동
     public void MoveLeft()
@@ -74,40 +130,23 @@ public class PlayerCarController : MonoBehaviour
             _targetPosition.x = laneXPositions[_currentLaneIndex];
         }
     }
-
-    public void SpeedUp()
-    {
-        normalSpeed += 10 * Time.deltaTime;
-    }
-
-    public void SpeedDown()
-    {
-        normalSpeed -= 10 * Time.deltaTime;
-    }
-    // 슬립스트림 체크
+    
+    // --- 슬립스트림 감지 로직 추가 ---
     private void CheckForSlipstream()
     {
-        float targetSpeed; // 이번 프레임의 목표 속도
-        // 차 앞에서 Ray를 쏴서 다른 차가 있는지 확인합니다.
+        // 차의 바로 앞에서 앞 방향으로 Ray를 쏴서 다른 차가 있는지 확인
         RaycastHit hit;
-        if (Physics.Raycast(transform.position, Vector3.forward, out hit, slipstreamDistance, otherCarLayer))
+        if (Physics.Raycast(transform.position, transform.forward, out hit, carStats.slipstreamActivationDistance, carStats.otherCarLayer))
         {
-            // 다른 차가 감지되면 슬립스트림 속도를 목표로 설정
-            targetSpeed = slipstreamSpeed;
+            // Ray에 다른 차가 감지되면 슬립스트림 상태로 설정
             isSlipstream = true;
         }
         else
         {
-            // 감지되지 않으면 기본 속도를 목표로 설정
-            targetSpeed = normalSpeed;
+            // 감지되지 않으면 슬립스트림 해제
             isSlipstream = false;
         }
-        
-        // 현재 속도를 목표 속도로 부드럽게 가속/감속합니다.
-        // Mathf.MoveTowards는 현재 값(currentSpeed)을 목표 값(targetSpeed)으로
-        // 최대 이동량(accelerationRate * Time.deltaTime)만큼 이동시킵니다.
-        currentSpeed = Mathf.MoveTowards(currentSpeed, targetSpeed, accelerationRate * Time.deltaTime);
-    }
+    }    
 
     // 위치를 부드럽게 업데이트
     private void UpdatePosition()
@@ -158,4 +197,89 @@ public class PlayerCarController : MonoBehaviour
         // 현재 각도에서 목표 각도로 부드럽게 회전 (Slerp)
         transform.rotation = Quaternion.Slerp(transform.rotation, _targetRotation, Time.deltaTime * rotationSpeed);
     }
+    // --- 충돌 감지 ---
+    private void OnCollisionEnter(Collision collision)
+    {
+        if (collision.gameObject.CompareTag("Obstacle"))
+        {
+            // 1. 내 차의 상태를 '감속 중'으로 변경
+            currentState = CarState.Decelerating;
+            
+            // 2. 카메라를 흔들어 충격 효과를 줍니다. (0.3초 동안 0.5 강도로)
+            if (mainCamera != null)
+            {
+                mainCamera.StartShake(0.3f, 0.5f);
+            }
+            // 3. 부딪힌 상대방 차량에 물리적 힘을 가합니다.
+            Rigidbody otherRb = collision.gameObject.GetComponent<Rigidbody>();
+            if (otherRb != null)
+            {
+                // 충돌 지점 정보를 가져옵니다.
+                ContactPoint contact = collision.contacts[0];            
+            
+                // 3-1. 기본적인 수평 방향의 힘 계산
+                Vector3 forceDirection = (collision.transform.position - transform.position).normalized;
+            
+                // --- 3-2. Y축 방향으로 힘 추가 (핵심 수정 부분) ---
+                forceDirection += Vector3.up * upwardImpactModifier;
+                // ----------------------------------------------------
+
+                float forceMagnitude = 20f;//currentSpeed * 2f;
+
+                // 3-3. 위쪽 방향이 추가된 최종 힘을 가함
+                otherRb.AddForceAtPosition(forceDirection.normalized * forceMagnitude, contact.point, ForceMode.Impulse);
+            }
+
+            // 4.내 차의 시각적 모델을 흔드는 효과
+            if (carVisualModel != null)
+            {
+                // 만약 이미 실행 중인 흔들림 코루틴이 있다면 멈춥니다.
+                if (_carShakeCoroutine != null)
+                {
+                    StopCoroutine(_carShakeCoroutine);
+                }
+                
+                //(시간, 회전 강도, 넉백 거리)
+                _carShakeCoroutine = StartCoroutine(ShakeCarModelCoroutine(0.6f, 2.0f, 1.5f));                                 
+            }
+            // ----------------------------------------------------    
+        }        
+    }
+    // --- 차량 모델을 흔드는 코루틴 (새로 추가된 함수) ---
+    private IEnumerator ShakeCarModelCoroutine(float duration, float magnitude, float knockbackDistance)
+    {
+        // 시작 시 모델의 원래 위치와 회전값을 저장
+        Quaternion originalRotation = carVisualModel.localRotation;
+        Vector3 originalPosition = carVisualModel.localPosition;
+
+        float elapsed = 0.0f;
+
+        while (elapsed < duration)
+        {
+            // --- 1. 회전 흔들림 (기존과 동일) ---
+            float z = Random.Range(-1f, 1f) * magnitude;
+            float x = Random.Range(-1f, 1f) * magnitude;
+            Quaternion randomRotation = Quaternion.Euler(x, 0, z);
+            carVisualModel.localRotation = originalRotation * randomRotation;
+
+            // --- 2. 뒤로 물러났다 돌아오는 넉백 (새로 추가) ---
+            // Sin 함수를 이용해 부드럽게 뒤로 갔다가 돌아오는 곡선을 만듭니다.
+            float knockback = Mathf.Sin(elapsed / duration * Mathf.PI) * -knockbackDistance;
+            carVisualModel.localPosition = new Vector3(originalPosition.x, originalPosition.y, originalPosition.z + knockback);
+            // ----------------------------------------------------
+
+            elapsed += Time.deltaTime;
+            yield return null;
+        }
+
+        // 효과가 끝나면 모델을 정확히 원래 위치와 회전값으로 복귀
+        carVisualModel.localRotation = Quaternion.identity;//originalRotation;
+        carVisualModel.localPosition = originalPosition;
+        
+        // --- 코루틴이 끝나는 시점에 상태를 '가속 중'으로 복구! (핵심 추가 부분) ---
+        currentState = CarState.Accelerating;
+        _carShakeCoroutine = null;
+        Debug.Log("충격 효과 종료. 다시 가속합니다!");
+    }
+    // ------------------------------------------------
 }

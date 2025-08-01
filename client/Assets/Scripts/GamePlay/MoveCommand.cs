@@ -43,13 +43,11 @@ public class ThrustCommand : ICommand
     {
         if (_direction.y > 0)
         {
-            Debug.Log("Command Up");
-            _playerCar.SpeedUp();
+            Debug.Log("Command Up");         
         }
         else if (_direction.y < 0)
         {
-            Debug.Log("Command Down");
-            _playerCar.SpeedDown();
+            Debug.Log("Command Down");         
         }
     }
 }

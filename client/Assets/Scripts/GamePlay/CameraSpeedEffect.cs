@@ -7,7 +7,7 @@ public class CameraSpeedEffect : MonoBehaviour
     [SerializeField] private PlayerCarController playerCarController; // 플레이어 차량 컨트롤러 참조
 
     [Header("FOV 설정")]
-    [SerializeField] private float normalFOV = 60f; // 일반 주행 시 FOV
+    [SerializeField] private float normalFOV = 75f; // 일반 주행 시 FOV
     [SerializeField] private float slipstreamFOV = 80f; // 슬립스트림 시 목표 FOV
     [SerializeField] private float fovChangeSpeed = 5f; // FOV 변경 속도
 
@@ -15,7 +15,7 @@ public class CameraSpeedEffect : MonoBehaviour
     // [Header("카메라 위치 오프셋")]
      //[SerializeField] private Vector3 normalOffset = new Vector3(0, 5, -10); // 일반 주행 시 카메라 상대 위치
      [SerializeField] private Vector3 normalOffset = new Vector3(0, 2f, -5f); // 차와의 기본 거리
-     [SerializeField] private Vector3 slipstreamOffset = new Vector3(0, 4, -12); // 슬립스트림 시 카메라 상대 위치
+     [SerializeField] private Vector3 slipstreamOffset = new Vector3(0, 1.2f, -3.5f); // 슬립스트림 시 카메라 상대 위치
      [SerializeField] private float offsetChangeSpeed = 5f; // 오프셋 변경 속도
 
 
@@ -73,8 +73,9 @@ public class CameraSpeedEffect : MonoBehaviour
          }
          transform.localPosition = Vector3.Lerp(transform.localPosition, targetOffset, Time.deltaTime * offsetChangeSpeed);
 
+         
         // (선택 사항) 카메라가 플레이어를 따라가도록 설정
         // 이 스크립트를 카메라 오브젝트에 붙이고, 카메라를 플레이어의 자식으로 두지 않았다면
-        // transform.position = playerCarController.transform.position + transform.rotation * currentOffset;
+        //transform.position = playerCarController.transform.position + transform.rotation * currentOffset;
     }
 }
