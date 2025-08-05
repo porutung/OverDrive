@@ -79,6 +79,9 @@ public class PlayerCarController : MonoBehaviour
         //  2. 자동 가속/감속 상태 관리
         HandleAccelerationState();
         
+        // 계산된 현재 속력으로 차를 앞으로 이동시킵니다.
+        //transform.Translate(Vector3.forward * currentSpeed * Time.deltaTime);
+        
         UpdatePosition();
         
         if (isTiltOrYaw)
@@ -152,7 +155,16 @@ public class PlayerCarController : MonoBehaviour
     private void UpdatePosition()
     {
         // 현재 위치에서 목표 위치로 부드럽게 이동 (Lerp)
-        transform.position = Vector3.Lerp(transform.position, _targetPosition, Time.deltaTime * laneChangeSpeed);
+        //transform.position = Vector3.Lerp(transform.position, _targetPosition, Time.deltaTime * laneChangeSpeed);
+        // 1. 현재 위치를 임시 변수에 저장합니다.
+        Vector3 currentPos = transform.position;
+
+        // 2. X축 위치만! 목표 지점을 향해 부드럽게 이동시킵니다.
+        // Vector3.Lerp 대신 X축 값만 계산하는 Mathf.Lerp를 사용합니다.
+        currentPos.x = Mathf.Lerp(currentPos.x, _targetPosition.x, Time.deltaTime * laneChangeSpeed);
+
+        // 3. Z축과 Y축은 그대로 둔 채, 변경된 X축 값만 최종적으로 적용합니다.
+        transform.position = currentPos;
     }
     
     // 틸트(기울기) 효과 업데이트

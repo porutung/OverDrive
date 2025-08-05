@@ -10,6 +10,7 @@ public class CarSpawner : MonoBehaviour
     [SerializeField] private float maxSpawnInterval = 3f; // 최대 스폰 간격
     [SerializeField] private float minCarSpeed = 10f; // 최소 차량 속도
     [SerializeField] private float maxCarSpeed = 60f; // 최대 차량 속도
+    [SerializeField] private PlayerCarController playerCar;
 
     void Start()
     {
@@ -42,6 +43,9 @@ public class CarSpawner : MonoBehaviour
 
         // 생성된 차량의 속도를 랜덤하게 설정
         float carSpeed = Random.Range(minCarSpeed, maxCarSpeed);
-        spawnedCar.GetComponent<OtherCar>().speed = carSpeed;
+        var otherCar = spawnedCar.GetComponent<OtherCar>();
+        otherCar.playerCar = playerCar;
+        otherCar.speed = carSpeed;
+        
     }
 }
