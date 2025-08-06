@@ -47,7 +47,7 @@ public class RoadScroller : MonoBehaviour
         // 가장 앞에 있는 도로가 플레이어 뒤로 충분히 이동했는지 확인
         if (firstRoad.position.z < playerCar.transform.position.z - scrollLength)
         {
-            Debug.Log($"Road '{firstRoad.name}'를 맨 뒤로 재배치합니다.");
+//            Debug.Log($"Road '{firstRoad.name}'를 맨 뒤로 재배치합니다.");
 
             // 가장 뒤에 있는 도로를 찾습니다.
             Transform lastRoad = roadList[0];

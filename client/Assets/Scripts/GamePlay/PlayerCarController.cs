@@ -25,6 +25,9 @@ public class PlayerCarController : MonoBehaviour
     public bool isSlipstream = false;
     public bool IsInSlipstream() { return isSlipstream; }
     
+    [Header("RayCast 위치값")]
+    [SerializeField]private Transform rayCastPoint;
+    
     // --- 자동 가속/감속 로직 변수 ---
     private enum CarState { Accelerating, Decelerating }
     private CarState currentState;
@@ -96,6 +99,10 @@ public class PlayerCarController : MonoBehaviour
         // 디버그용 로그 (슬립스트림 상태 표시)
         //Debug.Log($"State: {currentState}, Speed: {currentSpeed:F1}, Slipstream: {isSlipstream}");
         speedText.text = string.Format($"{currentSpeed:F0}km/h");
+        
+        // Raycast를 시각적으로 표시 (초록색: 슬립스트림 활성, 빨간색: 비활성)
+        Color rayColor = isSlipstream ? Color.magenta : Color.yellow;
+        Debug.DrawRay(rayCastPoint.position, rayCastPoint.forward * carStats.slipstreamActivationDistance, rayColor);
     }
     private void HandleAccelerationState()
     {
@@ -139,9 +146,10 @@ public class PlayerCarController : MonoBehaviour
     {
         // 차의 바로 앞에서 앞 방향으로 Ray를 쏴서 다른 차가 있는지 확인
         RaycastHit hit;
-        if (Physics.Raycast(transform.position, transform.forward, out hit, carStats.slipstreamActivationDistance, carStats.otherCarLayer))
+        if (Physics.Raycast(rayCastPoint.position, rayCastPoint.forward, out hit, carStats.slipstreamActivationDistance, carStats.otherCarLayer))
         {
             // Ray에 다른 차가 감지되면 슬립스트림 상태로 설정
+            Debug.Log("앞 차 감지! 거리: " + hit.distance); 
             isSlipstream = true;
         }
         else
@@ -216,6 +224,7 @@ public class PlayerCarController : MonoBehaviour
         {
             // 1. 내 차의 상태를 '감속 중'으로 변경
             currentState = CarState.Decelerating;
+            isSlipstream = false;
             
             // 2. 카메라를 흔들어 충격 효과를 줍니다. (0.3초 동안 0.5 강도로)
             if (mainCamera != null)
@@ -286,7 +295,7 @@ public class PlayerCarController : MonoBehaviour
 
         // 효과가 끝나면 모델을 정확히 원래 위치와 회전값으로 복귀
         carVisualModel.localRotation = Quaternion.identity;//originalRotation;
-        carVisualModel.localPosition = originalPosition;
+        carVisualModel.localPosition = Vector3.zero; //originalPosition;
         
         // --- 코루틴이 끝나는 시점에 상태를 '가속 중'으로 복구! (핵심 추가 부분) ---
         currentState = CarState.Accelerating;

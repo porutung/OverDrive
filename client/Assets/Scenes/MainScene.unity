@@ -119,6 +119,11 @@ NavMeshSettings:
     debug:
       m_Flags: 0
   m_NavMeshData: {fileID: 0}
+--- !u!4 &68566387 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 2796619974511929413, guid: 500b9d94d365b9042b3781621010cd90, type: 3}
+  m_PrefabInstance: {fileID: 451037533}
+  m_PrefabAsset: {fileID: 0}
 --- !u!4 &129658293 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 7516944452896742334, guid: d462d8ab1c1ea354eb5da421a6e6f369, type: 3}
@@ -146,7 +151,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7516944452896742334, guid: d462d8ab1c1ea354eb5da421a6e6f369, type: 3}
       propertyPath: m_LocalPosition.z
-      value: -20
+      value: -25
       objectReference: {fileID: 0}
     - target: {fileID: 7516944452896742334, guid: d462d8ab1c1ea354eb5da421a6e6f369, type: 3}
       propertyPath: m_LocalRotation.w
@@ -249,7 +254,8 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
-    m_RemovedComponents: []
+    m_RemovedComponents:
+    - {fileID: 8506244526611542330, guid: 500b9d94d365b9042b3781621010cd90, type: 3}
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
     m_AddedComponents: []
@@ -311,8 +317,9 @@ MonoBehaviour:
   - 2.5
   laneChangeSpeed: 15
   isSlipstream: 0
+  rayCastPoint: {fileID: 68566387}
   currentSpeed: 0
-  accelerationRate: 10
+  accelerationRate: 20
   upwardImpactModifier: 1.5
   isTiltOrYaw: 0
   tiltAngle: 35
@@ -376,7 +383,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 602782736}
-  - component: {fileID: 602782735}
+  - component: {fileID: 602782737}
   m_Layer: 0
   m_Name: Spawner
   m_TagString: Untagged
@@ -384,31 +391,6 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!114 &602782735
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 602782734}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 6476acd29ed457a40b6ddb0e7c6dd88e, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  otherCarPrefabs:
-  - {fileID: 5985622632461812214, guid: 398beaa6afeb46d41a758973fd2007f9, type: 3}
-  - {fileID: 5985622632461812214, guid: 78089a5881bda1346abde863fd13e5ec, type: 3}
-  - {fileID: 5985622632461812214, guid: 704ce0ed24220c3469b58d01289e4db2, type: 3}
-  laneXPositions:
-  - -2.5
-  - 0
-  - 2.5
-  spawnZPosition: 50
-  minSpawnInterval: 1
-  maxSpawnInterval: 3
-  minCarSpeed: 10
-  maxCarSpeed: 18
 --- !u!4 &602782736
 Transform:
   m_ObjectHideFlags: 0
@@ -424,6 +406,33 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &602782737
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 602782734}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 488f073b62d468f45b099ee1b24a323c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  patterns:
+  - {fileID: 11400000, guid: 4e3bd0cec4065ac468dd4d983d6b3d11, type: 2}
+  - {fileID: 11400000, guid: a54391207b4647c489d2b0d99a55e14f, type: 2}
+  - {fileID: 11400000, guid: 5d74a5408650830469aeb5b9b8f7a67b, type: 2}
+  - {fileID: 11400000, guid: 197e0c278c351fe4da49da2c7fbb911a, type: 2}
+  minPatternInterval: 0.5
+  maxPatternInterval: 1.5
+  laneXPositions:
+  - -2.5
+  - 0
+  - 2.5
+  spawnZPosition: 70
+  minCarSpeed: 20
+  maxCarSpeed: 20
+  playerCar: {fileID: 591242160}
 --- !u!1 &653547531
 GameObject:
   m_ObjectHideFlags: 0
@@ -766,7 +775,6 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 948565548}
-  - component: {fileID: 948565547}
   m_Layer: 0
   m_Name: RoadScroller_3
   m_TagString: Untagged
@@ -774,21 +782,6 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!114 &948565547
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 948565546}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: c9cc7cd43fe2d1f42967911665edd912, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  playerCar: {fileID: 591242160}
-  scrollLength: 50
-  numberOfRoads: 3
 --- !u!4 &948565548
 Transform:
   m_ObjectHideFlags: 0
@@ -797,13 +790,13 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 948565546}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 100}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 1027698275}
-  m_Father: {fileID: 0}
+  m_Father: {fileID: 1058728088}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &979285598
 GameObject:
@@ -814,7 +807,6 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 979285600}
-  - component: {fileID: 979285599}
   m_Layer: 0
   m_Name: RoadScroller_2
   m_TagString: Untagged
@@ -822,21 +814,6 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!114 &979285599
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 979285598}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: c9cc7cd43fe2d1f42967911665edd912, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  playerCar: {fileID: 591242160}
-  scrollLength: 50
-  numberOfRoads: 3
 --- !u!4 &979285600
 Transform:
   m_ObjectHideFlags: 0
@@ -845,19 +822,72 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 979285598}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 50}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 1213443542}
-  m_Father: {fileID: 0}
+  m_Father: {fileID: 1058728088}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!4 &1027698275 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 7516944452896742334, guid: d462d8ab1c1ea354eb5da421a6e6f369, type: 3}
   m_PrefabInstance: {fileID: 168345196}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &1058728086
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1058728088}
+  - component: {fileID: 1058728087}
+  m_Layer: 0
+  m_Name: RoadScroller
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1058728087
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1058728086}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c9cc7cd43fe2d1f42967911665edd912, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  playerCar: {fileID: 591242160}
+  roadList:
+  - {fileID: 1832820589}
+  - {fileID: 979285600}
+  - {fileID: 948565548}
+  scrollLength: 50
+--- !u!4 &1058728088
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1058728086}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 1832820589}
+  - {fileID: 979285600}
+  - {fileID: 948565548}
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1001 &1106493544
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -880,7 +910,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7516944452896742334, guid: d462d8ab1c1ea354eb5da421a6e6f369, type: 3}
       propertyPath: m_LocalPosition.z
-      value: -20
+      value: -25
       objectReference: {fileID: 0}
     - target: {fileID: 7516944452896742334, guid: d462d8ab1c1ea354eb5da421a6e6f369, type: 3}
       propertyPath: m_LocalRotation.w
@@ -909,6 +939,10 @@ PrefabInstance:
     - target: {fileID: 7516944452896742334, guid: d462d8ab1c1ea354eb5da421a6e6f369, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7588201963096578564, guid: d462d8ab1c1ea354eb5da421a6e6f369, type: 3}
+      propertyPath: m_IsActive
+      value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -942,7 +976,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7516944452896742334, guid: d462d8ab1c1ea354eb5da421a6e6f369, type: 3}
       propertyPath: m_LocalPosition.z
-      value: -20
+      value: -25
       objectReference: {fileID: 0}
     - target: {fileID: 7516944452896742334, guid: d462d8ab1c1ea354eb5da421a6e6f369, type: 3}
       propertyPath: m_LocalRotation.w
@@ -1322,29 +1356,13 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1832820589}
-  - component: {fileID: 1832820588}
   m_Layer: 0
-  m_Name: RoadScroller
+  m_Name: RoadScroller_1
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!114 &1832820588
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1832820587}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: c9cc7cd43fe2d1f42967911665edd912, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  playerCar: {fileID: 591242160}
-  scrollLength: 50
-  numberOfRoads: 3
 --- !u!4 &1832820589
 Transform:
   m_ObjectHideFlags: 0
@@ -1353,13 +1371,13 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1832820587}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 129658293}
-  m_Father: {fileID: 0}
+  m_Father: {fileID: 1058728088}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1964002683
 GameObject:
@@ -1523,9 +1541,7 @@ SceneRoots:
   - {fileID: 591242159}
   - {fileID: 1443066805}
   - {fileID: 602782736}
-  - {fileID: 1832820589}
-  - {fileID: 979285600}
-  - {fileID: 948565548}
+  - {fileID: 1058728088}
   - {fileID: 852673690}
   - {fileID: 2105746645}
   - {fileID: 1802915662}
