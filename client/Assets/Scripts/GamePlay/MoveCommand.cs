@@ -28,12 +28,12 @@ public class MoveCommand : ICommand
     }
 }
 
-public class ThrustCommand : ICommand
+public class TouchMoveCommand : ICommand
 {
     private PlayerCarController _playerCar;
     private Vector2 _direction;
 
-    public ThrustCommand(PlayerCarController playerCar, Vector2 direction)
+    public TouchMoveCommand(PlayerCarController playerCar, Vector2 direction)
     {
         _playerCar = playerCar;
         _direction = direction;
@@ -41,13 +41,18 @@ public class ThrustCommand : ICommand
 
     public void Execute()
     {
-        if (_direction.y > 0)
+        // 터치된 위치에 따라 좌/우 이동 실행
+        if (_direction.x < Screen.width / 2)
         {
-            Debug.Log("Command Up");         
+            // 커맨드를 생성하고 즉시 실행합니다.
+            _playerCar.MoveLeft();
+            Debug.Log("터치 입력: 왼쪽");
         }
-        else if (_direction.y < 0)
+        else
         {
-            Debug.Log("Command Down");         
-        }
+            // 커맨드를 생성하고 즉시 실행합니다.            
+            Debug.Log("터치 입력: 오른쪽");
+            _playerCar.MoveRight();
+        }        
     }
 }
