@@ -79,3 +79,5 @@ client/UserSettings
 client/Temp
 client/obj
 client/.idea
+client/speedracer_BurstDebugInformation_DoNotShip
+client/.utmp
