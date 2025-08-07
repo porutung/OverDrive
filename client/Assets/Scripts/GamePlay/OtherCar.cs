@@ -9,6 +9,9 @@ public class OtherCar : MonoBehaviour
         
         if (playerCar == null) return;
 
+        if (playerCar.CurrentState == PlayerCarController.CarState.OutOfFuel)
+            return;
+        
         // 플레이어 속도와 내 속도의 차이만큼, 즉 '상대 속도'로 뒤로 움직입니다.
         //float relativeSpeed = playerCar.currentSpeed - speed;
         transform.Translate(Vector3.back * speed * Time.deltaTime, Space.World);

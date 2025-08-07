@@ -13,12 +13,25 @@ public class CarStats : ScriptableObject
     public float decelerationAfterCrash = 25f; // 충돌 후 감속도
     
     // --- 슬립스트림 데이터 추가 ---
-    [Header("슬립스트림")]
-    [Tooltip("슬립스트림 시 도달할 최고 속도")]
-    public float slipstreamMaxSpeed = 30f;  // 최대 속도에서 증가할 증가속도
+    [Header("슬립스트림")]    
     [Tooltip("슬립스트림이 발동되는 앞 차와의 최대 거리")]
     public float slipstreamActivationDistance = 15f;
     [Tooltip("앞 차를 감지할 때 사용할 레이어")]
     public LayerMask otherCarLayer;
     // ---------------------------
+    // --- 부스트 데이터 추가 ---
+    [Header("아슬하게 피하기 부스트")]
+    [Tooltip("부스트가 지속되는 기본 시간")]
+    public float boostBaseDuration = 1.0f;
+    [Tooltip("가장 아슬하게 피했을 때 추가되는 최대 시간")]
+    public float boostBonusDuration = 0.5f;
+    [Tooltip("부스트 시의 최고 속도")]
+    public float boostMaxSpeed = 50f;
+    
+    // --- 연료 데이터 추가 ---
+    [Header("연료 시스템")]
+    [Tooltip("최대 연료량")]
+    public float maxFuel = 100f;
+    [Tooltip("초당 연료 소모량")]
+    public float fuelConsumptionRate = 1f;
 }

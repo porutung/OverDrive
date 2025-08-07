@@ -30,7 +30,7 @@ public class SlipsstreamEffect : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        if (_playerCar.isSlipstream)
+        if (_playerCar.IsBoosting())
         {
             // 슬립스트림 중이면 목표 강도를 설정값으로
             _targetIntensity = slipstreamBlurIntensity;

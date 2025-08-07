@@ -28,6 +28,9 @@ public class PatternSpawner : MonoBehaviour
     {
         while (true)
         {
+            if (playerCar.CurrentState == PlayerCarController.CarState.OutOfFuel)
+                yield return null;
+            
             // 다음 패턴이 나올 때까지 랜덤 시간 동안 대기
             float waitTime = Random.Range(minPatternInterval, maxPatternInterval);
             yield return new WaitForSeconds(waitTime);

@@ -46,7 +46,7 @@ public class ChaseCamera : MonoBehaviour
         if (target == null || playerCarController == null) return;
 
         // 1. 슬립스트림 상태에 따라 목표 FOV와 Offset 결정
-        bool isSlipstreaming = playerCarController.IsInSlipstream(); // isSlipstream을 메서드로 호출
+        bool isSlipstreaming = playerCarController.IsBoosting(); 
         float targetFOV = isSlipstreaming ? slipstreamFOV : normalFOV;
         Vector3 targetOffset = isSlipstreaming ? slipstreamOffset : normalOffset;
 

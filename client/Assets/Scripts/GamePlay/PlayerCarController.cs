@@ -1,11 +1,14 @@
 using UnityEngine;
 using System.Collections;
 using TMPro;
-
+using UnityEngine.UI;
 public class PlayerCarController : MonoBehaviour
 {
     public ChaseCamera mainCamera; // 인스펙터에서 메인 카메라를 연결해줘야 함
     public TextMeshProUGUI speedText;
+    public TextMeshProUGUI splipstreamDistanceText;
+    public Slider fuelSlider;
+    public GameObject gameOverScreen;
     
     [Header("차량 성능 데이터")]
     [Tooltip("이 차량에 적용할 성능 스펙 파일을 연결해주세요.")]
@@ -20,17 +23,24 @@ public class PlayerCarController : MonoBehaviour
     [SerializeField] private float[] laneXPositions = { -2.5f, 0f, 2.5f }; // 3개 차선의 x좌표
     [SerializeField] private float laneChangeSpeed = 15f; // 차선 변경 속도
     private int _currentLaneIndex = 1; // 현재 차선 (가운데에서 시작)
-
+    
+    // --- 연료 시스템 관련 변수 추가 ---
+    private float _currentFuel;
+    
     [Header("속도 및 슬립스트림")]
-    public bool isSlipstream = false;
-    public bool IsInSlipstream() { return isSlipstream; }
+    private bool _isBoosting = false;
+    private bool _isSlipstream = false;
+    public bool IsInSlipstream() { return _isSlipstream; }
+    public bool IsBoosting() { return _isBoosting; }
     
     [Header("RayCast 위치값")]
     [SerializeField]private Transform rayCastPoint;
+    private RaycastHit _slipstreamHit; // Raycast 정보를 저장할 변수
     
     // --- 자동 가속/감속 로직 변수 ---
-    private enum CarState { Accelerating, Decelerating }
+    public enum CarState { Accelerating, Decelerating, OutOfFuel }
     private CarState currentState;
+    public CarState CurrentState { get { return currentState; } }
     
     public float currentSpeed; // 현재 속도 (RoadScroller가 참조)
     [SerializeField] private float accelerationRate = 5f; // <--- 새롭게 추가된 부분: 속도 가감 속도
@@ -55,6 +65,8 @@ public class PlayerCarController : MonoBehaviour
     private Quaternion _targetRotation;
 
     private Coroutine _carShakeCoroutine = null;
+    private Coroutine _boostingCoroutine = null;
+    private float _boostTimeRemaining = 0f;
     
     void Start()
     {        
@@ -65,10 +77,30 @@ public class PlayerCarController : MonoBehaviour
         
         // 자동 가속 관련 초기화
         currentState = CarState.Accelerating;
+        // 연료 초기화
+        _currentFuel = carStats.maxFuel;
+        
+        gameOverScreen.gameObject.SetActive(false);
     }
 
     void Update()
     {
+        // --- 1. 연료 소모 및 고갈 확인 (가장 먼저 처리) ---
+        if (currentState != CarState.OutOfFuel)
+        {
+            _currentFuel -= carStats.fuelConsumptionRate * Time.deltaTime;
+            fuelSlider.value = _currentFuel / carStats.maxFuel;
+            
+            if (_currentFuel <= 0)
+            {
+                _currentFuel = 0;
+                currentState = CarState.OutOfFuel;
+                gameOverScreen.gameObject.SetActive(true);
+                Debug.Log("연료 고갈! 게임 오버!");
+                // 여기서 게임 오버 UI를 띄우는 이벤트를 호출할 수 있습니다.
+            }
+        }
+        
         // 1. 슬립스트림 조건 확인 (가속 상태일 때만)
         if (currentState == CarState.Accelerating)
         {
@@ -76,14 +108,11 @@ public class PlayerCarController : MonoBehaviour
         }
         else
         {
-            isSlipstream = false; // 감속 중에는 슬립스트림 비활성화
+            _isSlipstream = false; // 감속 중에는 슬립스트림 비활성화
         }
         
         //  2. 자동 가속/감속 상태 관리
         HandleAccelerationState();
-        
-        // 계산된 현재 속력으로 차를 앞으로 이동시킵니다.
-        //transform.Translate(Vector3.forward * currentSpeed * Time.deltaTime);
         
         UpdatePosition();
         
@@ -99,9 +128,10 @@ public class PlayerCarController : MonoBehaviour
         // 디버그용 로그 (슬립스트림 상태 표시)
         //Debug.Log($"State: {currentState}, Speed: {currentSpeed:F1}, Slipstream: {isSlipstream}");
         speedText.text = string.Format($"{currentSpeed:F0}km/h");
+        splipstreamDistanceText.text = string.Format($"Front Car Dist:{_slipstreamHit.distance:F00}");
         
         // Raycast를 시각적으로 표시 (초록색: 슬립스트림 활성, 빨간색: 비활성)
-        Color rayColor = isSlipstream ? Color.magenta : Color.yellow;
+        Color rayColor = _isSlipstream ? Color.magenta : Color.yellow;
         Debug.DrawRay(rayCastPoint.position, rayCastPoint.forward * carStats.slipstreamActivationDistance, rayColor);
     }
     private void HandleAccelerationState()
@@ -109,12 +139,15 @@ public class PlayerCarController : MonoBehaviour
         switch (currentState)
         {
             case CarState.Accelerating:
-                // --- 슬립스트림 여부에 따라 목표 속도 변경 ---
-                float targetSpeed = isSlipstream ? (carStats.maxSpeed + carStats.slipstreamMaxSpeed) : carStats.maxSpeed;
+                // --- 슬립스트림을 성공했으면 여부에 따라 목표 속도 변경 ---
+                float targetSpeed = _isBoosting ? (carStats.maxSpeed + carStats.boostMaxSpeed) : carStats.maxSpeed;
                 currentSpeed = Mathf.MoveTowards(currentSpeed, targetSpeed, carStats.acceleration * Time.deltaTime);
-                // ------------------------------------------
                 break;
             case CarState.Decelerating:
+                currentSpeed = Mathf.MoveTowards(currentSpeed, 0f, carStats.decelerationAfterCrash * Time.deltaTime);
+                break;
+            case CarState.OutOfFuel:
+                // 연료가 고갈되면 서서히 멈춥니다.
                 currentSpeed = Mathf.MoveTowards(currentSpeed, 0f, carStats.decelerationAfterCrash * Time.deltaTime);
                 break;
         }
@@ -124,6 +157,10 @@ public class PlayerCarController : MonoBehaviour
     // 왼쪽으로 이동
     public void MoveLeft()
     {
+        if (_isSlipstream)
+        {
+            TriggerNearMissBoost();
+        }
         if (_currentLaneIndex > 0)
         {
             _currentLaneIndex--;
@@ -136,27 +173,64 @@ public class PlayerCarController : MonoBehaviour
     {
         if (_currentLaneIndex < laneXPositions.Length - 1)
         {
+            if (_isSlipstream)
+            {
+                TriggerNearMissBoost();
+            }
             _currentLaneIndex++;
             _targetPosition.x = laneXPositions[_currentLaneIndex];
         }
     }
+    private void TriggerNearMissBoost()
+    {
+        float distanceFactor = Mathf.InverseLerp(carStats.slipstreamActivationDistance, 0, _slipstreamHit.distance);
+        float bonusDuration = carStats.boostBaseDuration + (carStats.boostBonusDuration * distanceFactor);
+
+        // 새로 계산된 시간을 기존 남은 시간에 더해줍니다.
+        _boostTimeRemaining += bonusDuration;
     
+        Debug.Log($"부스트 성공! {bonusDuration:F2}초 추가! (총 남은 시간: {_boostTimeRemaining:F2}초)");
+
+        // 만약 부스트 상태가 아니라면, 부스트 코루틴을 시작합니다.
+        if (!_isBoosting)
+        {
+            _boostingCoroutine = StartCoroutine(NearMissBoostCoroutine());
+        }
+    }
+
+    private IEnumerator NearMissBoostCoroutine()
+    {
+        _isBoosting = true;
+
+        // _boostTimeRemaining이 0보다 큰 동안 계속 부스트 상태를 유지합니다.
+        while (_boostTimeRemaining > 0)
+        {
+            // 매 프레임 남은 시간을 줄여나갑니다.
+            _boostTimeRemaining -= Time.deltaTime;
+            yield return null;
+        }
+
+        // 시간이 모두 소진되면 부스트를 종료합니다.
+        _isBoosting = false;
+        _boostingCoroutine = null;
+        Debug.Log("부스트 완전 종료!");
+    }
     // --- 슬립스트림 감지 로직 추가 ---
     private void CheckForSlipstream()
     {
         // 차의 바로 앞에서 앞 방향으로 Ray를 쏴서 다른 차가 있는지 확인
-        RaycastHit hit;
-        if (Physics.Raycast(rayCastPoint.position, rayCastPoint.forward, out hit, carStats.slipstreamActivationDistance, carStats.otherCarLayer))
+        if (Physics.Raycast(rayCastPoint.position, rayCastPoint.forward, out _slipstreamHit, carStats.slipstreamActivationDistance, carStats.otherCarLayer))
         {
             // Ray에 다른 차가 감지되면 슬립스트림 상태로 설정
-            Debug.Log("앞 차 감지! 거리: " + hit.distance); 
-            isSlipstream = true;
+            Debug.Log("앞 차 감지! 거리: " + _slipstreamHit.distance); 
+            _isSlipstream = true;
         }
         else
         {
             // 감지되지 않으면 슬립스트림 해제
-            isSlipstream = false;
+            _isSlipstream = false;
         }
+        splipstreamDistanceText.color = (_isSlipstream) ? Color.green :  Color.red;
     }    
 
     // 위치를 부드럽게 업데이트
@@ -220,11 +294,25 @@ public class PlayerCarController : MonoBehaviour
     // --- 충돌 감지 ---
     private void OnCollisionEnter(Collision collision)
     {
+        // 연료가 고갈된 상태에서는 충돌 로직을 실행하지 않음
+        if (currentState == CarState.OutOfFuel) 
+            return;
+        
         if (collision.gameObject.CompareTag("Obstacle"))
         {
             // 1. 내 차의 상태를 '감속 중'으로 변경
             currentState = CarState.Decelerating;
-            isSlipstream = false;
+            _isSlipstream = false;
+            // --- 부스트 강제 종료 로직 추가 ---
+            if (_isBoosting)
+            {
+                if (_boostingCoroutine != null)
+                {
+                    StopCoroutine(_boostingCoroutine); // 간단하게 모든 코루틴 중지    
+                }                
+                _isBoosting = false;
+                _boostTimeRemaining = 0f;
+            }            
             
             // 2. 카메라를 흔들어 충격 효과를 줍니다. (0.3초 동안 0.5 강도로)
             if (mainCamera != null)
@@ -298,7 +386,12 @@ public class PlayerCarController : MonoBehaviour
         carVisualModel.localPosition = Vector3.zero; //originalPosition;
         
         // --- 코루틴이 끝나는 시점에 상태를 '가속 중'으로 복구! (핵심 추가 부분) ---
-        currentState = CarState.Accelerating;
+        // --- 중요: 연료가 있을 때만 다시 가속 상태로 전환 ---
+        if (currentState != CarState.OutOfFuel)
+        {
+            currentState = CarState.Accelerating;            
+        }
+        
         _carShakeCoroutine = null;
         Debug.Log("충격 효과 종료. 다시 가속합니다!");
     }
