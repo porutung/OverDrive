@@ -11,7 +11,7 @@ public class SlipsstreamEffect : MonoBehaviour
     public float slipstreamBlurIntensity = 0.5f;
 
     [Tooltip("효과가 켜지고 꺼지는 속도")]
-    public float effectLerpSpeed = 5f;
+    private float effectLerpSpeed = 5f;
 
     // 제어할 모션 블러 효과를 저장할 변수
     private MotionBlur _motionBlur;
@@ -25,12 +25,14 @@ public class SlipsstreamEffect : MonoBehaviour
         // Volume 프로파일에서 MotionBlur 컴포넌트를 찾아옵니다.
         // TryGet()는 해당 오버라이드가 없으면 false를 반환하여 안전합니다.
         postProcessVolume.profile.TryGet(out _motionBlur);
+
+        effectLerpSpeed = _playerCar.carStats.nitroBoostDuration;
     }
 
     // Update is called once per frame
     void Update()
     {
-        if (_playerCar.IsBoosting())
+        if (_playerCar.IsNitroBoosting())
         {
             // 슬립스트림 중이면 목표 강도를 설정값으로
             _targetIntensity = slipstreamBlurIntensity;

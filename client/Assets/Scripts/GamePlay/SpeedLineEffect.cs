@@ -20,11 +20,12 @@ public class SpeedLineEffect : MonoBehaviour
     {
         // PlayerCarController에서 부스트 상태를 가져오는 public 메서드가 필요합니다.
         // 예: public bool IsBoosting() { return _isBoosting; }
-        if (playerCarController.IsBoosting() && _spawnCoroutine == null)
+        bool isBoosting = playerCarController.IsBoosting() || playerCarController.IsNitroBoosting();
+        if ( isBoosting && _spawnCoroutine == null)
         {
             _spawnCoroutine = StartCoroutine(SpawnLines());
         }
-        else if (!playerCarController.IsBoosting() && _spawnCoroutine != null)
+        else if (!isBoosting && _spawnCoroutine != null)
         {
             StopCoroutine(_spawnCoroutine);
             _spawnCoroutine = null;

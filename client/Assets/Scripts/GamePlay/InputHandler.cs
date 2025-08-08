@@ -11,7 +11,7 @@ public class InputHandler : MonoBehaviour
     
     // 키보드/게임패드용 좌우 이동 액션
     private InputAction _moveAction;
-    
+    private InputAction _nitroAction;
     // 터치용 액션
     private InputAction _touchPressAction;
     private InputAction _touchPositionAction;
@@ -24,6 +24,7 @@ public class InputHandler : MonoBehaviour
         // 'Move' 액션이 수행될 때 HandleMove 메서드를 호출하도록 등록합니다.
         
         _moveAction = _playerControls.Player.Move;
+        _nitroAction = _playerControls.Player.Nitro;
         
         _touchPressAction = _playerControls.Player.TouchPress;
         _touchPositionAction = _playerControls.Player.TouchPosition;
@@ -36,6 +37,7 @@ public class InputHandler : MonoBehaviour
         _touchPositionAction.Enable();
         
         _playerControls.Player.Move.performed += HandleMove;
+        _playerControls.Player.Nitro.performed += HandleNitro;
         // TouchPress 액션이 시작될 때(started) OnTouchInput 메서드를 호출하도록 '구독'
         _touchPressAction.started += OnTouchInput;
     }
@@ -43,7 +45,7 @@ public class InputHandler : MonoBehaviour
     private void OnDisable()
     {
         _playerControls.Player.Move.performed -= HandleMove;
-        
+        _playerControls.Player.Nitro.performed -= HandleNitro;
         // 스크립트가 비활성화될 때 구독을 '해제'하여 메모리 누수 방지
         _touchPressAction.started -= OnTouchInput;
 
@@ -61,7 +63,12 @@ public class InputHandler : MonoBehaviour
         ICommand moveCommand = new MoveCommand(playerCarController, moveInput);
         moveCommand.Execute();
     }
-    
+
+    private void HandleNitro(InputAction.CallbackContext context)
+    {
+        playerCarController.ActivateNitroBoost();
+        Debug.Log("키보드 입력: 나이트로!");
+    }
     // --- 터치 입력 처리 (이벤트 기반 방식) ---
     // TouchPress 액션이 시작될 때 Input System에 의해 자동으로 호출되는 메서드
     private void OnTouchInput(InputAction.CallbackContext context)

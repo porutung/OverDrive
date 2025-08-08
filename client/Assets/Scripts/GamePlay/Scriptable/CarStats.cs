@@ -34,4 +34,16 @@ public class CarStats : ScriptableObject
     public float maxFuel = 100f;
     [Tooltip("초당 연료 소모량")]
     public float fuelConsumptionRate = 1f;
+    
+    // --- Nitro 부스트 데이터 추가 ---
+    [Header("Nitro 부스트")]
+    [Tooltip("Nitro 부스트를 활성화하는 데 필요한 연속 콤보 횟수")]
+    public int nitroComboRequirement = 10;
+    [Tooltip("Nitro 부스트의 지속 시간")]
+    public float nitroBoostDuration = 5f;
+    [Tooltip("Nitro 부스트 시의 최고 속도")]
+    public float nitroBoostSpeed = 100f;
+    [Tooltip("Nitro 부스트 시 상대 차량에게 가할 힘의 크기")]
+    public float nitroCollisionForce = 100f;
+    
 }

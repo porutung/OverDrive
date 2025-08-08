@@ -1,0 +1,18 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4fbf9eb52748caa45adb6b487a1a3647, type: 3}
+  m_Name: Pattern_Fuel_1
+  m_EditorClassIdentifier: 
+  spawnEvents:
+  - carPrefab: {fileID: 2539299313048853703, guid: 44e2ebef995782d4d9c03092ce7b85ae, type: 3}
+    laneIndex: 1
+    timeOffset: 0

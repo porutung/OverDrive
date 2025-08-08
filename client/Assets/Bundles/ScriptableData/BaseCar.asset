@@ -13,10 +13,18 @@ MonoBehaviour:
   m_Name: BaseCar
   m_EditorClassIdentifier: 
   maxSpeed: 200
-  acceleration: 15
+  acceleration: 100
   decelerationAfterCrash: 50
-  slipstreamMaxSpeed: 30
-  slipstreamActivationDistance: 15
+  slipstreamActivationDistance: 10
   otherCarLayer:
     serializedVersion: 2
     m_Bits: 128
+  boostBaseDuration: 1
+  boostBonusDuration: 0.5
+  boostMaxSpeed: 50
+  maxFuel: 100
+  fuelConsumptionRate: 1
+  nitroComboRequirement: 10
+  nitroBoostDuration: 10
+  nitroBoostSpeed: 100
+  nitroCollisionForce: 30

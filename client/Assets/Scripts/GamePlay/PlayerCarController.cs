@@ -1,6 +1,7 @@
 using UnityEngine;
 using System.Collections;
 using TMPro;
+using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 public class PlayerCarController : MonoBehaviour
 {
@@ -9,6 +10,8 @@ public class PlayerCarController : MonoBehaviour
     public TextMeshProUGUI splipstreamDistanceText;
     public Slider fuelSlider;
     public GameObject gameOverScreen;
+    public Button restartButton;
+    public Button nitroBoostButton;
     
     [Header("차량 성능 데이터")]
     [Tooltip("이 차량에 적용할 성능 스펙 파일을 연결해주세요.")]
@@ -32,18 +35,18 @@ public class PlayerCarController : MonoBehaviour
     private bool _isSlipstream = false;
     public bool IsInSlipstream() { return _isSlipstream; }
     public bool IsBoosting() { return _isBoosting; }
+    public bool IsNitroBoosting() { return currentState == CarState.NitroBoosting; }
     
     [Header("RayCast 위치값")]
     [SerializeField]private Transform rayCastPoint;
     private RaycastHit _slipstreamHit; // Raycast 정보를 저장할 변수
     
     // --- 자동 가속/감속 로직 변수 ---
-    public enum CarState { Accelerating, Decelerating, OutOfFuel }
+    public enum CarState { Accelerating, Decelerating, OutOfFuel, NitroBoosting }
     private CarState currentState;
     public CarState CurrentState { get { return currentState; } }
     
-    public float currentSpeed; // 현재 속도 (RoadScroller가 참조)
-    [SerializeField] private float accelerationRate = 5f; // <--- 새롭게 추가된 부분: 속도 가감 속도
+    public float currentSpeed; // 현재 속도 (RoadScroller가 참조)    
     
     [Header("충돌 물리 효과")]
     [Tooltip("충돌 시 상대방을 위로 띄우는 힘의 크기")]
@@ -68,6 +71,9 @@ public class PlayerCarController : MonoBehaviour
     private Coroutine _boostingCoroutine = null;
     private float _boostTimeRemaining = 0f;
     
+    [Header("NitroBoost 콤보 횟수")]
+    private int _boostComboCount = 0;
+    
     void Start()
     {        
         // 차선 이동 관련 초기화
@@ -81,8 +87,35 @@ public class PlayerCarController : MonoBehaviour
         _currentFuel = carStats.maxFuel;
         
         gameOverScreen.gameObject.SetActive(false);
+        nitroBoostButton.gameObject.SetActive(false);
     }
 
+    public void RestartGame()
+    {
+        SceneManager.LoadScene(SceneManager.GetActiveScene().name);
+    }
+    public void ActivateNitroBoost()
+    {
+        // 버튼이 활성화된 상태에서만 발동 가능
+        if (nitroBoostButton != null && nitroBoostButton.gameObject.activeSelf)
+        {
+            nitroBoostButton.gameObject.SetActive(false);
+            _boostComboCount = 0; // 콤보 카운트 초기화
+            StartCoroutine(NitroBoostCoroutine());
+        }
+    }
+    public void AddFuel(float amount)
+    {
+        // 현재 연료에 보급량을 더합니다.
+        _currentFuel += amount;
+
+        // 최대 연료량을 넘지 않도록 제한합니다.
+        if (_currentFuel > carStats.maxFuel)
+        {
+            _currentFuel = carStats.maxFuel;
+        }
+        Debug.Log($"연료 {amount} 보급! 현재 연료: {_currentFuel}");
+    }
     void Update()
     {
         // --- 1. 연료 소모 및 고갈 확인 (가장 먼저 처리) ---
@@ -128,7 +161,7 @@ public class PlayerCarController : MonoBehaviour
         // 디버그용 로그 (슬립스트림 상태 표시)
         //Debug.Log($"State: {currentState}, Speed: {currentSpeed:F1}, Slipstream: {isSlipstream}");
         speedText.text = string.Format($"{currentSpeed:F0}km/h");
-        splipstreamDistanceText.text = string.Format($"Front Car Dist:{_slipstreamHit.distance:F00}");
+        splipstreamDistanceText.text = string.Format($"Combo : {_boostComboCount}");//string.Format($"Front Car Dist:{_slipstreamHit.distance:F2}");
         
         // Raycast를 시각적으로 표시 (초록색: 슬립스트림 활성, 빨간색: 비활성)
         Color rayColor = _isSlipstream ? Color.magenta : Color.yellow;
@@ -148,7 +181,12 @@ public class PlayerCarController : MonoBehaviour
                 break;
             case CarState.OutOfFuel:
                 // 연료가 고갈되면 서서히 멈춥니다.
-                currentSpeed = Mathf.MoveTowards(currentSpeed, 0f, carStats.decelerationAfterCrash * Time.deltaTime);
+                currentSpeed = Mathf.MoveTowards(currentSpeed, 0f, carStats.acceleration * Time.deltaTime);
+                break;
+            case CarState.NitroBoosting:
+                // 일정 슬립스트림 콤보 유지시 니트로 부스트
+                float targetSpped = carStats.maxSpeed + carStats.boostMaxSpeed + carStats.nitroBoostSpeed;
+                currentSpeed = Mathf.MoveTowards(currentSpeed, targetSpped, carStats.acceleration * Time.deltaTime); // 더 빠르게 가속
                 break;
         }
     }
@@ -190,7 +228,19 @@ public class PlayerCarController : MonoBehaviour
         _boostTimeRemaining += bonusDuration;
     
         Debug.Log($"부스트 성공! {bonusDuration:F2}초 추가! (총 남은 시간: {_boostTimeRemaining:F2}초)");
+        
+        // --- 콤보 카운트 및 나이트로 버튼 활성화 로직 추가 ---
+        _boostComboCount++;
+        Debug.Log($"부스트 콤보: {_boostComboCount}");
 
+        if (_boostComboCount >= carStats.nitroComboRequirement)
+        {
+            if (nitroBoostButton != null)
+            {
+                nitroBoostButton.gameObject.SetActive(true);
+            }
+        }
+        
         // 만약 부스트 상태가 아니라면, 부스트 코루틴을 시작합니다.
         if (!_isBoosting)
         {
@@ -212,6 +262,7 @@ public class PlayerCarController : MonoBehaviour
 
         // 시간이 모두 소진되면 부스트를 종료합니다.
         _isBoosting = false;
+        _boostComboCount = 0;
         _boostingCoroutine = null;
         Debug.Log("부스트 완전 종료!");
     }
@@ -222,7 +273,7 @@ public class PlayerCarController : MonoBehaviour
         if (Physics.Raycast(rayCastPoint.position, rayCastPoint.forward, out _slipstreamHit, carStats.slipstreamActivationDistance, carStats.otherCarLayer))
         {
             // Ray에 다른 차가 감지되면 슬립스트림 상태로 설정
-            Debug.Log("앞 차 감지! 거리: " + _slipstreamHit.distance); 
+            //Debug.Log("앞 차 감지! 거리: " + _slipstreamHit.distance); 
             _isSlipstream = true;
         }
         else
@@ -300,6 +351,28 @@ public class PlayerCarController : MonoBehaviour
         
         if (collision.gameObject.CompareTag("Obstacle"))
         {
+            Rigidbody otherRb = collision.gameObject.GetComponent<Rigidbody>();
+            // --- 나이트로 상태일 때의 충돌 처리 (핵심) ---
+            if (currentState == CarState.NitroBoosting)
+            {                
+                if (otherRb != null)
+                {
+                    // 상대방만 날려버림 (넉백 현상 없음)
+                    Vector3 forceDirection = (collision.transform.position - transform.position).normalized + (Vector3.up * 0.5f);
+                    otherRb.AddForce(forceDirection * carStats.nitroCollisionForce, ForceMode.Impulse);
+                }
+                // 내 차는 아무런 영향을 받지 않고, 함수를 즉시 종료
+                return;
+            }
+            // -----------------------------------------
+
+            // --- 일반 충돌 시 콤보 초기화 ---
+            _boostComboCount = 0;
+            if (nitroBoostButton != null)
+            {
+                nitroBoostButton.gameObject.SetActive(false);
+            }
+            
             // 1. 내 차의 상태를 '감속 중'으로 변경
             currentState = CarState.Decelerating;
             _isSlipstream = false;
@@ -311,6 +384,7 @@ public class PlayerCarController : MonoBehaviour
                     StopCoroutine(_boostingCoroutine); // 간단하게 모든 코루틴 중지    
                 }                
                 _isBoosting = false;
+                _boostComboCount = 0;
                 _boostTimeRemaining = 0f;
             }            
             
@@ -319,8 +393,8 @@ public class PlayerCarController : MonoBehaviour
             {
                 mainCamera.StartShake(0.3f, 0.5f);
             }
+            
             // 3. 부딪힌 상대방 차량에 물리적 힘을 가합니다.
-            Rigidbody otherRb = collision.gameObject.GetComponent<Rigidbody>();
             if (otherRb != null)
             {
                 // 충돌 지점 정보를 가져옵니다.
@@ -396,4 +470,27 @@ public class PlayerCarController : MonoBehaviour
         Debug.Log("충격 효과 종료. 다시 가속합니다!");
     }
     // ------------------------------------------------
+    // --- 나이트로 부스트 코루틴 (새로 추가) ---
+    private IEnumerator NitroBoostCoroutine()
+    {
+        // 기존 부스트는 모두 중단
+        if (_boostingCoroutine != null) StopCoroutine(_boostingCoroutine);
+        _isBoosting = false;
+        _boostTimeRemaining = 0;
+        _boostComboCount = 0;
+        
+        // 나이트로 상태로 전환
+        currentState = CarState.NitroBoosting;
+        Debug.Log("나이트로 부스트 발동!");
+
+        // 정해진 시간만큼 대기
+        yield return new WaitForSeconds(carStats.nitroBoostDuration);
+
+        // 나이트로가 끝나면 다시 일반 가속 상태로 복귀
+        if (currentState == CarState.NitroBoosting)
+        {
+            currentState = CarState.Accelerating;
+            Debug.Log("나이트로 부스트 종료!");
+        }
+    }
 }

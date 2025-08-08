@@ -18,6 +18,16 @@ public class PatternSpawner : MonoBehaviour
     [SerializeField] private float minCarSpeed = 10f; // 최소 차량 속도
     [SerializeField] private float maxCarSpeed = 60f; // 최대 차량 속도
     [SerializeField] private PlayerCarController playerCar;
+    
+    // --- 연료 보급 설정 추가 ---
+    [Header("연료 보급 설정")]
+    [Tooltip("소환할 연료 아이템 프리팹")]
+    [SerializeField] private List<ObstaclePattern> fuelItems;
+    [Tooltip("연료 아이템이 소환되는 시간 간격(초)")]
+    [SerializeField] private float fuelSpawnInterval = 70f;
+    
+    private float accumWaitTime = 0f;
+    // -------------------------
     void Start()
     {
         StartCoroutine(SpawnPatternRoutine());
@@ -33,11 +43,24 @@ public class PatternSpawner : MonoBehaviour
             
             // 다음 패턴이 나올 때까지 랜덤 시간 동안 대기
             float waitTime = Random.Range(minPatternInterval, maxPatternInterval);
-            yield return new WaitForSeconds(waitTime);
-
-            // 패턴 리스트에서 무작위로 하나를 선택
-            ObstaclePattern randomPattern = patterns[Random.Range(0, patterns.Count)];
             
+            yield return new WaitForSeconds(waitTime);
+            
+            accumWaitTime += waitTime;
+            
+            ObstaclePattern randomPattern = null;
+            if (accumWaitTime >= fuelSpawnInterval)
+            {                
+                accumWaitTime = 0f;
+                // 연료 아이템 소환
+                randomPattern = fuelItems[Random.Range(0, fuelItems.Count)];                                
+            }
+            else
+            {
+                // 패턴 리스트에서 무작위로 하나를 선택(자동차)
+                randomPattern = patterns[Random.Range(0, patterns.Count)];                                           
+            }
+                
             // 선택된 패턴을 실행
             yield return StartCoroutine(ExecutePattern(randomPattern));
         }
@@ -65,4 +88,5 @@ public class PatternSpawner : MonoBehaviour
             otherCar.speed = carSpeed;
         }
     }
+ 
 }
