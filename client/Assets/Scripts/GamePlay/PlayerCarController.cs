@@ -5,7 +5,8 @@ using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 public class PlayerCarController : MonoBehaviour
 {
-    public ChaseCamera mainCamera; // 인스펙터에서 메인 카메라를 연결해줘야 함
+    //public ChaseCamera mainCamera; // 인스펙터에서 메인 카메라를 연결해줘야 함
+    public AdvancedChaseCamera mainCamera;
     public TextMeshProUGUI speedText;
     public TextMeshProUGUI splipstreamDistanceText;
     public Slider fuelSlider;
@@ -23,9 +24,9 @@ public class PlayerCarController : MonoBehaviour
     public Transform carVisualModel;
     
     [Header("차선 설정")]
-    [SerializeField] private float[] laneXPositions = { -2.5f, 0f, 2.5f }; // 3개 차선의 x좌표
+    [SerializeField] private float[] laneXPositions = { -5.0f, -2.5f, 0f, 2.5f, 5.0f }; // 3개 차선의 x좌표
     [SerializeField] private float laneChangeSpeed = 15f; // 차선 변경 속도
-    private int _currentLaneIndex = 1; // 현재 차선 (가운데에서 시작)
+    private int _currentLaneIndex = 2; // 현재 차선 (가운데에서 시작)
     
     // --- 연료 시스템 관련 변수 추가 ---
     private float _currentFuel;
@@ -262,7 +263,6 @@ public class PlayerCarController : MonoBehaviour
 
         // 시간이 모두 소진되면 부스트를 종료합니다.
         _isBoosting = false;
-        _boostComboCount = 0;
         _boostingCoroutine = null;
         Debug.Log("부스트 완전 종료!");
     }
@@ -364,14 +364,6 @@ public class PlayerCarController : MonoBehaviour
                 // 내 차는 아무런 영향을 받지 않고, 함수를 즉시 종료
                 return;
             }
-            // -----------------------------------------
-
-            // --- 일반 충돌 시 콤보 초기화 ---
-            _boostComboCount = 0;
-            if (nitroBoostButton != null)
-            {
-                nitroBoostButton.gameObject.SetActive(false);
-            }
             
             // 1. 내 차의 상태를 '감속 중'으로 변경
             currentState = CarState.Decelerating;
@@ -384,7 +376,6 @@ public class PlayerCarController : MonoBehaviour
                     StopCoroutine(_boostingCoroutine); // 간단하게 모든 코루틴 중지    
                 }                
                 _isBoosting = false;
-                _boostComboCount = 0;
                 _boostTimeRemaining = 0f;
             }            
             

@@ -13,7 +13,7 @@ public class PatternSpawner : MonoBehaviour
     [SerializeField] private float maxPatternInterval = 5f;
 
     [Header("소환 위치")]
-    [SerializeField] private float[] laneXPositions = { -2.5f, 0f, 2.5f };
+    [SerializeField] private float[] laneXPositions = { -5.0f, -2.5f, 0f, 2.5f, 5.0f };
     [SerializeField] private float spawnZPosition = 100f;
     [SerializeField] private float minCarSpeed = 10f; // 최소 차량 속도
     [SerializeField] private float maxCarSpeed = 60f; // 최대 차량 속도

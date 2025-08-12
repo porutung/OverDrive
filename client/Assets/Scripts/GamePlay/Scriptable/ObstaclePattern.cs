@@ -7,7 +7,7 @@ public class SpawnEvent
 {
     [Tooltip("소환할 장애물 차량 프리팹")]
     public GameObject carPrefab;
-    [Tooltip("소환될 차선 인덱스 (0:왼쪽, 1:중앙, 2:오른쪽)")]
+    [Tooltip("소환될 차선 인덱스 (0:1차선(왼쪽끝) ~ 4:5차선(오른쪽 끝)")]
     public int laneIndex;
     [Tooltip("이전 차량이 소환된 후 몇 초 뒤에 소환할지")]
     public float timeOffset;
