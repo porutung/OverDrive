@@ -53,7 +53,7 @@ public class AdvancedChaseCamera : MonoBehaviour
         _currentView = (_currentView == CameraView.ThirdPerson) ? CameraView.QuarterView : CameraView.ThirdPerson;
         Debug.Log($"카메라 시점 변경: {_currentView}");
     }
-
+/*
     void LateUpdate()
     {
         if (target == null || playerCarController == null) return;
@@ -106,7 +106,55 @@ public class AdvancedChaseCamera : MonoBehaviour
         transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, Time.deltaTime * transitionSpeed);
         mainCamera.fieldOfView = Mathf.Lerp(mainCamera.fieldOfView, targetFOV, Time.deltaTime * transitionSpeed);
     }
-    
+    */
+    void LateUpdate()
+    {
+        if (target == null || playerCarController == null) return;
+
+        // 1. 플레이어의 현재 상태 확인
+        bool isBoosting = playerCarController.IsBoosting() || playerCarController.IsInSlipstream();
+        bool isNitroActive = playerCarController.IsNitroBoosting();
+
+        // 2. 현재 상태에 따라 목표 위치, 회전, FOV를 '결정'만 합니다.
+        Vector3 targetPosition;
+        Quaternion targetRotation;
+        float targetFOV;
+
+        if (_currentView == CameraView.QuarterView)
+        {
+            // 쿼터뷰 상태 목표 값 설정
+            targetPosition = target.position + quarterViewOffset;
+            targetRotation = Quaternion.Euler(quarterViewRotationX, 0, 0);
+            targetFOV = isBoosting ? quarterViewFOV + fovBoostAmount : quarterViewFOV;
+        }
+        else // ThirdPerson 뷰일 때
+        {
+            if (isNitroActive)
+            {
+                // 1인칭 상태 목표 값 설정
+                targetPosition = target.position + target.TransformDirection(firstPersonOffset);
+                targetRotation = target.rotation;
+                targetFOV = firstPersonFOV;
+            }
+            else
+            {
+                // 일반 3인칭 상태 목표 값 설정
+                targetRotation = Quaternion.LookRotation(target.position - transform.position);
+                targetFOV = isBoosting ? thirdPersonFOV + fovBoostAmount : thirdPersonFOV;
+
+                // 부드러운 좌우 추적 로직을 포함하여 최종 위치 계산
+                float targetX = Mathf.Lerp(transform.position.x, target.position.x, Time.deltaTime * 5f);
+                targetPosition = target.position + thirdPersonOffset;
+                targetPosition.x = targetX;
+            }
+        }
+
+        // 3. '결정된' 최종 목표 값을 향해 카메라를 '한 번에' 부드럽게 움직입니다.
+        //    이제 모든 위치 전환이 이 Lerp를 통해 이루어집니다.
+        transform.position = Vector3.Lerp(transform.position, targetPosition, Time.deltaTime * transitionSpeed);
+        transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, Time.deltaTime * transitionSpeed);
+        mainCamera.fieldOfView = Mathf.Lerp(mainCamera.fieldOfView, targetFOV, Time.deltaTime * transitionSpeed);
+    }
     // --- 쉐이크 시작 함수 ---
     public void StartShake(float duration, float magnitude)
     {

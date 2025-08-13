@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: BaseCar
   m_EditorClassIdentifier: 
   maxSpeed: 200
-  acceleration: 100
+  acceleration: 50
   decelerationAfterCrash: 50
   slipstreamActivationDistance: 10
   otherCarLayer:

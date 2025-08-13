@@ -15,8 +15,8 @@ public class PatternSpawner : MonoBehaviour
     [Header("소환 위치")]
     [SerializeField] private float[] laneXPositions = { -5.0f, -2.5f, 0f, 2.5f, 5.0f };
     [SerializeField] private float spawnZPosition = 100f;
-    [SerializeField] private float minCarSpeed = 10f; // 최소 차량 속도
-    [SerializeField] private float maxCarSpeed = 60f; // 최대 차량 속도
+    [SerializeField] private float minCarSpeed = 20f; // 최소 차량 속도
+    [SerializeField] private float maxCarSpeed = 80f; // 최대 차량 속도
     [SerializeField] private PlayerCarController playerCar;
     
     // --- 연료 보급 설정 추가 ---
@@ -39,7 +39,9 @@ public class PatternSpawner : MonoBehaviour
         while (true)
         {
             if (playerCar.CurrentState == PlayerCarController.CarState.OutOfFuel)
-                yield return null;
+            {
+                yield break;
+            }                
             
             // 다음 패턴이 나올 때까지 랜덤 시간 동안 대기
             float waitTime = Random.Range(minPatternInterval, maxPatternInterval);
@@ -81,11 +83,21 @@ public class PatternSpawner : MonoBehaviour
 
             // 차량 생성 (오브젝트 풀링을 사용한다면 여기서 GetFromPool 호출)
             GameObject spawnedCar = Instantiate(spawnEvent.carPrefab, spawnPosition, Quaternion.identity);
+            
             // 생성된 차량의 속도를 랜덤하게 설정
+            // 1. min/maxCarSpeed를 '속도 차이'로 해석합니다.
+            //    (예: 20~80으로 설정하면, 장애물은 항상 플레이어보다 20~80만큼 느려집니다)
             float carSpeed = Random.Range(minCarSpeed, maxCarSpeed);
+            
+            // 2. 플레이어의 현재 속도에서 이 차이를 빼서 장애물의 '절대 속도'를 계산합니다.
+            float absoluteSpeed = playerCar.currentSpeed - carSpeed;
+            
             var otherCar = spawnedCar.GetComponent<OtherCar>();
             otherCar.playerCar = playerCar;
-            otherCar.speed = carSpeed;
+            
+            // 3. 계산된 절대 속도를 장애물 차에 할당합니다.
+            //    (혹시 플레이어 속도가 너무 느려 음수가 되는 것을 방지)
+            otherCar.speed = Mathf.Max(0, absoluteSpeed);
         }
     }
  
