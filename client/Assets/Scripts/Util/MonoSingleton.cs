@@ -1,8 +1,6 @@
 /*
  * Monobehaviour를 상속 받는 Singleton Generic
  */
-
-using Cysharp.Threading.Tasks;
 using UnityEngine;
 
 public class MonoSingleton<T> : MonoBehaviour where T : MonoBehaviour
@@ -78,10 +76,5 @@ public class MonoSingleton<T> : MonoBehaviour where T : MonoBehaviour
         _instance = null;
         _is_load = false;
         _is_initialized = false;
-    }
-    
-    public virtual async UniTask Initialize()
-    {
-        // empty.
     }
 }
