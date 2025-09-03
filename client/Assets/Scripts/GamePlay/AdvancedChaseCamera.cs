@@ -112,7 +112,7 @@ public class AdvancedChaseCamera : MonoBehaviour
         if (target == null || playerCarController == null) return;
 
         // 1. 플레이어의 현재 상태 확인
-        bool isBoosting = playerCarController.IsBoosting() || playerCarController.IsInSlipstream();
+        bool isBoosting = playerCarController.IsBoosting();// || playerCarController.IsInSlipstream();
         bool isNitroActive = playerCarController.IsNitroBoosting();
 
         // 2. 현재 상태에 따라 목표 위치, 회전, FOV를 '결정'만 합니다.
