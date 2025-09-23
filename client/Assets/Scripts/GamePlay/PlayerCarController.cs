@@ -1,5 +1,6 @@
 using UnityEngine;
 using System.Collections;
+using Cysharp.Threading.Tasks;
 using TMPro;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
@@ -7,12 +8,13 @@ public class PlayerCarController : MonoBehaviour
 {
     //public ChaseCamera mainCamera; // 인스펙터에서 메인 카메라를 연결해줘야 함
     public AdvancedChaseCamera mainCamera;
-    public TextMeshProUGUI speedText;
-    public TextMeshProUGUI splipstreamDistanceText;
-    public Slider fuelSlider;
-    public GameObject gameOverScreen;
-    public Button restartButton;
-    public Button nitroBoostButton;
+    private PlayerInfoModel _playerInfo = new PlayerInfoModel();
+    private PlayerInfoViewModel _playerInfoViewModel = null;
+    
+    private UIManager _uiManager;
+    
+    //public GameObject gameOverScreen;
+    //public Button restartButton;
     
     [Header("차량 성능 데이터")]
     [Tooltip("이 차량에 적용할 성능 스펙 파일을 연결해주세요.")]
@@ -75,7 +77,7 @@ public class PlayerCarController : MonoBehaviour
     [Header("NitroBoost 콤보 횟수")]
     private int _boostComboCount = 0;
     
-    void Start()
+    async UniTask Start()
     {        
         // 차선 이동 관련 초기화
         _targetPosition = transform.position;
@@ -87,23 +89,25 @@ public class PlayerCarController : MonoBehaviour
         // 연료 초기화
         _currentFuel = carStats.maxFuel;
         
-        gameOverScreen.gameObject.SetActive(false);
-        nitroBoostButton.gameObject.SetActive(false);
-    }
+        //gameOverScreen.gameObject.SetActive(false);
+        
+        _playerInfo.OnNirtoBoost += ActivateNitroBoost;
 
-    public void RestartGame()
-    {
-        SceneManager.LoadScene(SceneManager.GetActiveScene().name);
-    }
+        _uiManager = ServiceLocator.Get<UIManager>();
+        
+        _playerInfoViewModel = new PlayerInfoViewModel(_playerInfo);
+        await _uiManager.ShowPage<PlayerInfoViewModel>(_playerInfoViewModel);
+        
+        _playerInfo.SetNitro(false);
+    }   
     public void ActivateNitroBoost()
     {
-        // 버튼이 활성화된 상태에서만 발동 가능
-        if (nitroBoostButton != null && nitroBoostButton.gameObject.activeSelf)
-        {
-            nitroBoostButton.gameObject.SetActive(false);
-            _boostComboCount = 0; // 콤보 카운트 초기화
-            StartCoroutine(NitroBoostCoroutine());
-        }
+        // 버튼이 활성화된 상태에서만 발동 가능        
+        _boostComboCount = 0; // 콤보 카운트 초기화
+        _playerInfo.SetCombo(_boostComboCount);
+        _playerInfo.SetNitro(false);
+        
+        StartCoroutine(NitroBoostCoroutine());        
     }
     public void AddFuel(float amount)
     {
@@ -123,13 +127,15 @@ public class PlayerCarController : MonoBehaviour
         if (currentState != CarState.OutOfFuel)
         {
             _currentFuel -= carStats.fuelConsumptionRate * Time.deltaTime;
-            fuelSlider.value = _currentFuel / carStats.maxFuel;
+            //fuelSlider.value = _currentFuel / carStats.maxFuel;
+            _playerInfo.SetFuel(_currentFuel / carStats.maxFuel);
             
-            if (_currentFuel <= 0)
+            if (currentState != CarState.OutOfFuel && _currentFuel <= 0)
             {
                 _currentFuel = 0;
                 currentState = CarState.OutOfFuel;
-                gameOverScreen.gameObject.SetActive(true);
+                
+                _uiManager.ShowPopup<GameOverViewModel>().Forget();
                 Debug.Log("연료 고갈! 게임 오버!");
                 // 여기서 게임 오버 UI를 띄우는 이벤트를 호출할 수 있습니다.
             }
@@ -161,8 +167,12 @@ public class PlayerCarController : MonoBehaviour
         }      
         // 디버그용 로그 (슬립스트림 상태 표시)
         //Debug.Log($"State: {currentState}, Speed: {currentSpeed:F1}, Slipstream: {isSlipstream}");
-        speedText.text = string.Format($"{currentSpeed:F0}km/h");
-        splipstreamDistanceText.text = string.Format($"Combo : {_boostComboCount}");//string.Format($"Front Car Dist:{_slipstreamHit.distance:F2}");
+        //speedText.text = string.Format($"{currentSpeed:F0}km/h");
+        //splipstreamDistanceText.text = string.Format($"Combo : {_boostComboCount}");//string.Format($"Front Car Dist:{_slipstreamHit.distance:F2}");
+        
+        _playerInfo.SetSpeed(currentSpeed);
+        _playerInfo.SetCombo(_boostComboCount);
+        
         
         // Raycast를 시각적으로 표시 (초록색: 슬립스트림 활성, 빨간색: 비활성)
         Color rayColor = _isSlipstream ? Color.magenta : Color.yellow;
@@ -235,11 +245,8 @@ public class PlayerCarController : MonoBehaviour
         Debug.Log($"부스트 콤보: {_boostComboCount}");
 
         if (_boostComboCount >= carStats.nitroComboRequirement)
-        {
-            if (nitroBoostButton != null)
-            {
-                nitroBoostButton.gameObject.SetActive(true);
-            }
+        {            
+            _playerInfo.SetNitro(true);            
         }
         
         // 만약 부스트 상태가 아니라면, 부스트 코루틴을 시작합니다.
@@ -281,7 +288,7 @@ public class PlayerCarController : MonoBehaviour
             // 감지되지 않으면 슬립스트림 해제
             _isSlipstream = false;
         }
-        splipstreamDistanceText.color = (_isSlipstream) ? Color.green :  Color.red;
+        //splipstreamDistanceText.color = (_isSlipstream) ? Color.green :  Color.red;
     }    
 
     // 위치를 부드럽게 업데이트
