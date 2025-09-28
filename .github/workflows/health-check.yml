@@ -17,12 +17,16 @@ jobs:
           lfs: true
 
       - name: Fail if Unity generated folders are committed
+        shell: bash
         run: |
-          bad=$(git ls-files | grep -Ei '^(Library/|Temp/|Obj/|Builds?/|Logs/|UserSettings/)')
+          # grep이 매치 없으면 1(정상)을 반환하므로 무시하되, 결과 문자열로 판단
+          bad=$(git ls-files | grep -Ei '^(Library/|Temp/|Obj/|Builds?/|Logs/|UserSettings/)' || true)
           if [ -n "$bad" ]; then
             echo "::error::Generated folders must not be committed:"
             echo "$bad"
             exit 1
+          else
+            echo "OK: no generated folders tracked."
           fi
 
       - name: Large files not tracked by LFS (>=50MB)
