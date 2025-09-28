@@ -1,0 +1,46 @@
+name: Repo health (Unity mirror)
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+jobs:
+  health:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout (with LFS)
+        uses: actions/checkout@v4
+        with:
+          lfs: true
+
+      - name: Fail if Unity generated folders are committed
+        run: |
+          bad=$(git ls-files | grep -Ei '^(Library/|Temp/|Obj/|Builds?/|Logs/|UserSettings/)')
+          if [ -n "$bad" ]; then
+            echo "::error::Generated folders must not be committed:"
+            echo "$bad"
+            exit 1
+          fi
+
+      - name: Large files not tracked by LFS (>=50MB)
+        run: |
+          git lfs install
+          big=$(git ls-files | xargs -I{} bash -lc 'f="{}"; [ -f "$f" ] && [ $(stat -c%s "$f" 2>/dev/null || stat -f%z "$f") -ge 52428800 ] && echo "$f" || true')
+          if [ -n "$big" ]; then
+            echo "Found large files (>=50MB):"
+            echo "$big"
+            echo "Checking if tracked by LFS..."
+            for f in $big; do
+              if ! git lfs track | grep -q "$(echo $f | sed 's/.*\.//')"; then
+                echo "::error::$f is large and not covered by LFS patterns"
+                fail=1
+              fi
+            done
+            [ -n "$fail" ] && exit 1
+          fi
+
+      - name: Show LFS files
+        run: git lfs ls-files || true
