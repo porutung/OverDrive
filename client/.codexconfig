@@ -1,0 +1,44 @@
+{
+  // ===========================================
+  // 🤖 Codex CLI Configuration (Korean + GPT-5)
+  // ===========================================
+
+  "model": "gpt-5",
+  "temperature": 0.3,
+  "max_output_tokens": 2048,
+
+  // 언어 지침
+  "system_prompt": "모든 답변을 한국어로 해주세요. 기술 용어와 코드 명령은 영어 그대로 유지해도 괜찮습니다.",
+  "preferred_language": "ko",
+
+  // 인덱싱 관련
+  "context_depth": 3,
+  "max_files": 300,
+  "max_file_size_kb": 512,
+
+  // 캐시 / 로그
+  "enable_cache": true,
+  "cache_dir": ".codexcache",
+  "cache_ttl_hours": 24,
+  "logging": {
+    "level": "info",
+    "log_dir": ".codexlogs"
+  },
+
+  "ignore_file": ".codexignore",
+
+  // 분석 우선순위 언어
+  "language_priority": [
+    "csharp",
+    "shaderlab",
+    "json",
+    "yaml"
+  ],
+
+  // 프로젝트 진입점
+  "entry_points": [
+    "Assets/Scripts",
+    "Assets/Scenes",
+    "ProjectSettings/ProjectVersion.txt"
+  ]
+}

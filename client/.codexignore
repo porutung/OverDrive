@@ -1,0 +1,99 @@
+# ========================================
+# 🤖 Codex CLI Ignore (Unity + Rider Custom)
+# ========================================
+
+# Unity 기본 빌드/캐시 폴더
+Library/
+Temp/
+Obj/
+Logs/
+UserSettings/
+MemoryCaptures/
+Build/
+Builds/
+BuildArtifacts/
+ScriptAssemblies/
+CrashReports/
+
+# Addressables 및 캐시 데이터
+AddressableAssetsData/Build*
+ServerData/
+AssetBundles/
+StreamingAssets/aa/
+Bundles/
+CacheServerData/
+*.bundle
+
+# Shader 관련 생성 파일
+*.shadergraph.meta
+ShaderCache/
+ShaderVariantCollections/
+*.shadercompiler*
+
+# 프로젝트 설정 중 불필요한 부분
+*.pidb
+*.pdb
+*.mdb
+*.user
+*.suo
+*.tmp
+*.bak
+*.old
+*.orig
+*.booproj
+
+# JetBrains Rider / IDEA 관련
+.idea/
+*.iml
+out/
+*.ipr
+*.iws
+
+# OS-specific
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# 패키지, 로그, 빌드 결과물
+node_modules/
+.vscode/
+.cache/
+dist/
+*.log
+*.zip
+*.rar
+*.7z
+*.tar
+*.gz
+
+# 이미지 및 리소스 (대용량 리소스는 Codex 분석 제외)
+*.psd
+*.tga
+*.tif
+*.tiff
+*.png
+*.jpg
+*.jpeg
+*.bmp
+*.mp4
+*.mov
+*.avi
+*.wav
+*.ogg
+*.mp3
+
+# 패키지 관련
+Packages/com.unity.package-manager-ui/
+Packages/com.unity.collab-proxy/
+Packages/manifest.json.meta
+Packages/packages-lock.json.meta
+
+# 테스트 및 샘플 파일
+*.test.cs
+Tests/
+SampleScenes/
+Samples~/ 
+
+# Codex 관련 임시/로그
+.codexcache/
+.codexlogs/
