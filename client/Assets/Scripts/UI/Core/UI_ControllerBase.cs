@@ -57,6 +57,11 @@ public abstract class UI_ControllerBase : MonoBehaviour
         var viewInstance = await _assetLoader.InstantiateAsync(path, parent);
             
         var view = viewInstance.GetComponent<View_Base<T>>();
+        if (view == null)
+        {
+            Debug.LogError($"[UI_ControllerBase] View instance not found on {viewInstance.GetType().Name}., Components {typeof(T).Name}");
+        }
+        
         var viewModel = new T();
         view.Initialize(viewModel);
         
