@@ -103,6 +103,7 @@ MonoBehaviour:
   m_VerticalAlignment: 256
   m_textAlignment: 65535
   m_characterSpacing: 0
+  m_characterHorizontalScale: 1
   m_wordSpacing: 0
   m_lineSpacing: 0
   m_lineSpacingMax: 0
@@ -239,6 +240,7 @@ MonoBehaviour:
   m_VerticalAlignment: 256
   m_textAlignment: 65535
   m_characterSpacing: 0
+  m_characterHorizontalScale: 1
   m_wordSpacing: 0
   m_lineSpacing: 0
   m_lineSpacingMax: 0
@@ -727,6 +729,7 @@ MonoBehaviour:
   m_VerticalAlignment: 512
   m_textAlignment: 65535
   m_characterSpacing: 0
+  m_characterHorizontalScale: 1
   m_wordSpacing: 0
   m_lineSpacing: 0
   m_lineSpacingMax: 0
@@ -863,6 +866,7 @@ MonoBehaviour:
   m_VerticalAlignment: 512
   m_textAlignment: 65535
   m_characterSpacing: 0
+  m_characterHorizontalScale: 1
   m_wordSpacing: 0
   m_lineSpacing: 0
   m_lineSpacingMax: 0
@@ -1325,11 +1329,11 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 245b2f8c506ffdf48b565857b18c569a, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: 
-  _speedText: {fileID: 0}
-  _comboText: {fileID: 0}
-  _comboComboText: {fileID: 0}
-  _nitroButton: {fileID: 0}
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerInfoView
+  _speedText: {fileID: 3106893881370526678}
+  _comboText: {fileID: 4211213278846849548}
+  _comboComboText: {fileID: 1122946141412842839}
+  _nitroButton: {fileID: 5900842441471503059}
 --- !u!1 &6260138553138531456
 GameObject:
   m_ObjectHideFlags: 0
