@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 
 /// <summary>
@@ -42,5 +43,10 @@ public abstract class View_Base<T> : MonoBehaviour where T : ViewModel_Base
     {
         // 메모리 누수를 방지하기 위해 ViewModel과의 연결을 반드시 해제합니다.
         UnbindViewModel();
+    }
+
+    private void Reset()
+    {
+        Bind.DoUpdate(this);
     }
 }

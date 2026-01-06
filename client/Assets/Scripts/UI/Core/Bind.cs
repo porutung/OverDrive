@@ -1,42 +1,19 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
 using System.Reflection;
 using UnityEngine;
 
-/// <summary>
-/// 사용 예시.
-/// GameObject 또는 Component 타입을 얻어옴.
-/// 단일 변수, List, Array 지원.
-///
-/// [Bind("게임오브젝트 이름")] Component 변수명;
-/// [Bind("게임오브젝트 이름", Bind.BindType.Once)] List<GameObject> 변수명; // Finds object "게임오브젝트 이름", gets its direct children as GameObjects
-/// [Bind("게임오브젝트 이름", Bind.BindType.Once)] ComponentType[] 변수명; // Finds object "게임오브젝트 이름", gets ComponentType[] using GetComponentsInChildren
-/// [Bind("게임오브젝트 이름", Bind.BindType.Multi)] List<ComponentType> 변수명 = new List<ComponentType>();
-//  [Bind("게임오브젝트 이름", Bind.BindType.MultiContains)] List<GameObject> 변수명 = new List<GameObject>();
-//  Bind.BindType.Once => GameObject 이름과 동일한 단일 오브젝트에서 타입 검색. List/Array는 해당 오브젝트의 자식에서 검색.
-//  Bind.BindType.Multi => GameObject 이름과 정확히 일치하는 모든 오브젝트에서 타입 검색 (List<> 필요).
-//  Bind.BindType.MultiContains => GameObject 이름 포함하는 모든 오브젝트에서 타입 검색 (List<> 필요).
-/// </summary>
+// ==========================================
+// 1. Attributes
+// ==========================================
 
 [AttributeUsage(AttributeTargets.Field, Inherited = false)]
 public sealed class InnerBind : Attribute
 {
-    /// <summary>
-    /// 검색할 GameObject의 이름
-    /// </summary>
     public readonly string ObjectName;
-    
-    /// <summary>
-    /// 부모 GameObject의 이름 (선택사항)
-    /// </summary>
     public readonly string ParentName;
-    
-    /// <summary>
-    /// Inner 클래스 객체를 생성하고 해당 클래스 내에서 Bind 속성을 찾을 GameObject의 이름입니다.
-    /// </summary>
-    /// <param name="objectName">검색할 GameObject의 이름</param>
-    /// <param name="parentName">부모 GameObject의 이름 (선택사항)</param>
+
     public InnerBind(string objectName, string parentName = null)
     {
         ObjectName = objectName ?? throw new ArgumentNullException(nameof(objectName));
@@ -44,666 +21,401 @@ public sealed class InnerBind : Attribute
     }
 }
 
-[AttributeUsage(AttributeTargets.Field, Inherited = false)] // 필드에만 적용 가능하도록 제한
-public sealed class Bind : Attribute // ===> 이름 변경: BindProperty -> Bind
+[AttributeUsage(AttributeTargets.Field, Inherited = false)]
+public sealed class Bind : Attribute
 {
     public enum BindType
     {
-        Once,          // 이름이 정확히 일치하는 첫번째 오브젝트를 찾음.
-        Multi,         // 이름이 정확히 일치하는 모든 오브젝트를 찾음.
-        MultiContains, // 이름에 해당 문자열이 포함된 모든 오브젝트를 찾음.
+        Once,           // 이름 일치 단일 객체 (리스트인 경우 해당 객체의 자식들)
+        Multi,          // 이름 일치 모든 객체
+        MultiContains,  // 이름 포함 모든 객체
     }
 
-    // --- Inner Cache Class ---
-    // 내부 클래스 이름은 그대로 두거나 필요시 변경 (예: BindingInfo)
-    // 여기서는 BindInfo 그대로 사용
-    private sealed class BindInfo
-    {
-        public readonly FieldInfo Field;
-        public readonly Bind Attribute;
-        public readonly Type FieldElementType; // For Lists/Arrays, the T in List<T> or T[]
-        public readonly bool IsList;
-        public readonly bool IsArray;
-        public readonly bool IsGameObject; // Is the FieldType or ElementType a GameObject?
-
-        public object InnerObject; // Inner class 인스턴스
-        public FieldInfo ParentField; // Inner class를 소유한 필드
-        public string InnerObjectName; // Inner object의 GameObject 이름
-        public string InnerParentName; // Inner object의 부모 GameObject 이름
-
-        
-        public BindInfo(FieldInfo field, Bind attribute) // ===> 타입 변경: BindProperty -> Bind
-        {
-            Field = field;
-            Attribute = attribute;
-            IsList = field.FieldType.IsGenericType && field.FieldType.GetGenericTypeDefinition() == typeof(List<>);
-            IsArray = field.FieldType.IsArray;
-
-            if (IsList)
-            {
-                FieldElementType = field.FieldType.GetGenericArguments()[0];
-            }
-            else if (IsArray)
-            {
-                FieldElementType = field.FieldType.GetElementType();
-            }
-            else
-            {
-                FieldElementType = field.FieldType; // For single elements
-            }
-
-            IsGameObject = FieldElementType == typeof(GameObject);
-        }
-    }
-
-    // --- Static Cache for Reflection Data ---
-    // Cache BindInfo per MonoBehaviour Type to avoid repeated reflection
-    // 캐시 변수 이름은 그대로 두거나 필요시 변경 (예: s_typeBindingInfoCache)
-    private static readonly Dictionary<Type, List<BindInfo>> s_typeBindInfoCache = new Dictionary<Type, List<BindInfo>>();
-
-    // --- Attribute Properties ---
+    // [누락되었던 부분 복구] ================================
     public readonly string ObjectName;
     public readonly string ParentName;
-    public readonly BindType BindRule; // Enum 타입 접근은 Bind.BindType 으로 변경됨
+    public readonly BindType BindRule;
 
-    // --- Constructors ---
-    // ===> 생성자 이름 변경: BindProperty -> Bind
     public Bind(string objectName, BindType bindType = BindType.Once, string parentName = null)
     {
         ObjectName = objectName ?? throw new ArgumentNullException(nameof(objectName));
         BindRule = bindType;
         ParentName = parentName;
     }
+    // =======================================================
 
-    // --- Core Binding Logic ---
-    // ===> 메서드 이름 변경: BindProperty.DoUpdate -> Bind.DoUpdate
-    public static void DoUpdate(MonoBehaviour target)
+    // ==========================================
+    // 2. Internal Cache Structure
+    // ==========================================
+    private sealed class BindInfo
     {
-        if (target == null)
+        public readonly FieldInfo Field;
+        public readonly Bind Attribute;
+        public readonly Type FieldElementType;
+        public readonly bool IsList;
+        public readonly bool IsArray;
+        public readonly bool IsGameObject;
+
+        // InnerBind 관련 정보
+        public FieldInfo ParentField;   // Inner Class를 소유한 메인 필드
+        public string InnerObjectName;  // Inner Class가 기준 잡을 객체 이름
+        public string InnerParentName;  // Inner Class 기준 객체의 부모 이름
+
+        // 런타임 인스턴스
+        public object InnerInstance;    
+
+        public BindInfo(FieldInfo field, Bind attribute)
         {
-            // ===> 에러 메시지 변경: BindProperty -> Bind
-            Debug.LogError("Bind.DoUpdate: Target MonoBehaviour is null.");
-            return;
-        }
+            Field = field;
+            Attribute = attribute;
+            IsList = field.FieldType.IsGenericType && field.FieldType.GetGenericTypeDefinition() == typeof(List<>);
+            IsArray = field.FieldType.IsArray;
 
-        Type targetType = target.GetType();
-        List<BindInfo> bindInfos;
+            if (IsList) FieldElementType = field.FieldType.GetGenericArguments()[0];
+            else if (IsArray) FieldElementType = field.FieldType.GetElementType();
+            else FieldElementType = field.FieldType;
 
-        // 1. Get BindInfo (from cache or generate) - Reduced Reflection Cost
-        lock (s_typeBindInfoCache) // Basic locking for safety, though less critical in Unity's main thread
-        {
-            if (!s_typeBindInfoCache.TryGetValue(targetType, out bindInfos))
-            {
-                bindInfos = new List<BindInfo>();
-                FieldInfo[] fields = targetType.GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.FlattenHierarchy);
-                foreach (FieldInfo field in fields)
-                {
-                    Bind attr = field.GetCustomAttribute<Bind>(false);
-                    if (attr != null)
-                    {
-                        // Validate Field Type compatibility with BindType
-                        bool isCollection = field.FieldType.IsGenericType && field.FieldType.GetGenericTypeDefinition() == typeof(List<>) || field.FieldType.IsArray;
-                        if ((attr.BindRule == BindType.Multi || attr.BindRule == BindType.MultiContains) && !isCollection)
-                        {
-                            Debug.LogError($"Bind Error: Field '{field.Name}' in '{targetType.Name}' uses BindType '{attr.BindRule}' but is not a List<> or Array. Binding skipped.", target);
-                            continue; // Skip this field
-                        }
-                        if (attr.BindRule == BindType.Once && isCollection)
-                        {
-                            // Allow List/Array for Once, but warn if it's not GameObject or Component based?
-                            Type elementType = isCollection ? (field.FieldType.IsArray ? field.FieldType.GetElementType() : field.FieldType.GetGenericArguments()[0]) : field.FieldType;
-                            if (elementType == null || (!typeof(Component).IsAssignableFrom(elementType) && elementType != typeof(GameObject)))
-                            {
-                                Debug.LogWarning($"Bind Warning: Field '{field.Name}' in '{targetType.Name}' uses BindType.Once with a collection of non-Component/GameObject type '{elementType.Name}'. Ensure '{attr.ObjectName}' exists.", target);
-                                // We'll still try, but it relies on GetComponentsInChildren working
-                            }
-                        }
-
-                        bindInfos.Add(new BindInfo(field, attr));
-                    }
-                    
-                    InnerBind innerBindAttr = field.GetCustomAttribute<InnerBind>(false);
-                    if (innerBindAttr != null && !typeof(MonoBehaviour).IsAssignableFrom(field.FieldType))
-                    {
-                        // 필드 값이 null이 아닌지 확인
-                        object innerObject = field.GetValue(target);
-                        if (innerObject == null)
-                        {
-                            innerObject = Activator.CreateInstance(field.FieldType);
-                            field.SetValue(target, innerObject);
-                        }
-                        
-                        // 내부 클래스의 타입
-                        Type innerType = innerObject.GetType();
-                            
-                        // 내부 클래스의 모든 필드 검사
-                        FieldInfo[] innerFields = innerType.GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
-                            
-                        foreach (FieldInfo innerField in innerFields)
-                        {
-                            Bind innerBindAttrField = innerField.GetCustomAttribute<Bind>(false);
-                            if (innerBindAttrField != null)
-                            {
-                                // Inner class의 필드를 위한 바인딩 정보 추가
-                                bindInfos.Add(new BindInfo(innerField, innerBindAttrField) {
-                                    InnerObject = innerObject,
-                                    ParentField = field,
-                                    InnerObjectName = innerBindAttr.ObjectName,
-                                    InnerParentName = innerBindAttr.ParentName
-                                });
-                            }
-                        }
-                    }
-
-                }
-                s_typeBindInfoCache[targetType] = bindInfos;
-            }
-            else
-            {
-                Dictionary<string, object> innerObjectMap = new Dictionary<string, object>();
-            
-                // 현재 타겟에서 모든 InnerBind 필드 값 수집
-                FieldInfo[] allFields = targetType.GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.FlattenHierarchy);
-                foreach (FieldInfo field in allFields)
-                {
-                    InnerBind innerBindAttr = field.GetCustomAttribute<InnerBind>(false);
-                    if (innerBindAttr != null && !typeof(MonoBehaviour).IsAssignableFrom(field.FieldType))
-                    {
-                        // 필드 값이 null이 아닌지 확인
-                        object innerObject = field.GetValue(target);
-                        if (innerObject == null)
-                        {
-                            // 객체가 null이면 생성
-                            innerObject = Activator.CreateInstance(field.FieldType);
-                            field.SetValue(target, innerObject);
-                        }
-                    
-                        // 내부 필드 이름 + 객체 이름으로 맵에 저장
-                        string key = $"{field.Name}_{innerBindAttr.ObjectName}";
-                        innerObjectMap[key] = innerObject;
-                    }
-                }
-                
-                foreach (BindInfo info in bindInfos)
-                {
-                    if (info.InnerObject != null && info.ParentField != null)
-                    {
-                        string key = $"{info.ParentField.Name}_{info.InnerObjectName}";
-                        if (innerObjectMap.TryGetValue(key, out object newInnerObject))
-                        {
-                            // 새 객체 참조로 업데이트
-                            info.InnerObject = newInnerObject;
-                        }
-                    }
-                }
-            }
-        }
-
-        if (bindInfos.Count == 0)
-        {
-            // No fields with [Bind] found for this type
-            return;
-        }
-
-        // 2. Get All Transforms Once - Reduced Hierarchy Traversal Cost
-        List<Transform> allTransforms = new List<Transform>();
-        target.GetComponentsInChildren<Transform>(true, allTransforms); // Include inactive
-        allTransforms.Remove(target.transform); // Remove self
-
-        // 3. Process Bindings
-        foreach (BindInfo info in bindInfos)
-        {
-            try // Add try-catch around each field binding
-            {
-                if (info.InnerObject != null && !string.IsNullOrEmpty(info.InnerObjectName))
-                {
-                    // Inner object의 상위 객체 찾기
-                    Transform innerTransform = FindTransform(target.transform, allTransforms, info.InnerObjectName, info.InnerParentName);
-                    
-                    if (innerTransform != null)
-                    {
-                        // Inner class의 필드에 대한 바인딩 처리
-                        switch (info.Attribute.BindRule)
-                        {
-                            case BindType.Once:
-                                BindOnceInner(target, info, innerTransform);
-                                break;
-                            case BindType.Multi:
-                                BindMultiInner(target, info, innerTransform, false);
-                                break;
-                            case BindType.MultiContains:
-                                BindMultiInner(target, info, innerTransform, true);
-                                break;
-                        }
-                    }
-                    else
-                    {
-                        Debug.LogError($"Bind Error: Could not find GameObject named '{info.InnerObjectName}' for inner class field in '{target.name}'.", target);
-                    }
-                }
-                else
-                {
-                    // Enum 접근 시 클래스 이름(Bind)을 명시해야 할 수도 있음 (Bind.BindType.Once)
-                    // 하지만 현재 컨텍스트에서는 BindType 직접 접근 가능
-                    switch (info.Attribute.BindRule)
-                    {
-                        case BindType.Once:
-                            BindOnce(target, info, allTransforms);
-                            break;
-                        case BindType.Multi:
-                            BindMulti(target, info, allTransforms, false);
-                            break;
-                        case BindType.MultiContains:
-                            BindMulti(target, info, allTransforms, true);
-                            break;
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                Debug.LogError($"Bind Error: Failed to bind field '{info.Field.Name}' in '{target.name}' ({targetType.Name}). Rule: {info.Attribute.BindRule}, ObjectName: '{info.Attribute.ObjectName}'.\nException: {ex}", target);
-            }
+            IsGameObject = FieldElementType == typeof(GameObject);
         }
     }
-    
-    private static Transform FindTransform(Transform target, List<Transform> allTransforms, string objectName, string parentName)
-    {
-        if (string.IsNullOrEmpty(objectName))
-            return null;
 
-        // 부모 지정된 경우 부모 하위에서 검색
+    // ==========================================
+    // 3. Static Caches (Optimization)
+    // ==========================================
+    private static readonly Dictionary<Type, List<BindInfo>> s_typeBindInfoCache = new Dictionary<Type, List<BindInfo>>();
+    
+    // [Optimized] GC 발생 방지를 위한 재사용 리스트
+    private static readonly List<Transform> s_sharedTransforms = new List<Transform>(256);
+
+    // ==========================================
+    // 4. Public API (Main Entry)
+    // ==========================================
+    public static void DoUpdate(MonoBehaviour target)
+    {
+        if (target == null) return;
+
+        // 1. 바인딩 정보 가져오기 (캐싱 처리됨)
+        List<BindInfo> bindInfos = GetCachedBindInfos(target);
+        if (bindInfos == null || bindInfos.Count == 0) return;
+
+        // 2. 계층 구조 수집 (GC 최적화: 정적 리스트 재사용)
+        s_sharedTransforms.Clear();
+        target.GetComponentsInChildren<Transform>(true, s_sharedTransforms);
+
+        try
+        {
+            // 3. 각 필드 바인딩 수행
+            foreach (BindInfo info in bindInfos)
+            {
+                ProcessBinding(target, info);
+            }
+        }
+        catch (Exception ex)
+        {
+            Debug.LogError($"[Bind] 치명적 오류 발생: {ex.Message}", target);
+        }
+        finally
+        {
+            // 4. 정리 (메모리 누수 방지)
+            s_sharedTransforms.Clear();
+        }
+    }
+
+    // ==========================================
+    // 5. Core Logic - Binding Process
+    // ==========================================
+
+    private static void ProcessBinding(MonoBehaviour target, BindInfo info)
+    {
+        // A. Inner Class 바인딩인 경우
+        if (info.ParentField != null)
+        {
+            ResolveInnerBinding(target, info);
+        }
+        // B. 일반 필드 바인딩인 경우
+        else
+        {
+            ResolveStandardBinding(target, info);
+        }
+    }
+
+    private static void ResolveInnerBinding(MonoBehaviour target, BindInfo info)
+    {
+        // Inner Instance가 유효한지 확인
+        if (info.InnerInstance == null) return;
+
+        // Inner Class의 검색 기준이 될 Root 찾기
+        Transform innerRoot = FindTransform(target.transform, s_sharedTransforms, info.InnerObjectName, info.InnerParentName);
+
+        if (innerRoot != null)
+        {
+            ApplyBindRule(target, info, innerRoot, info.InnerInstance);
+        }
+        else
+        {
+            Debug.LogError($"[Bind] InnerObject '{info.InnerObjectName}'를 찾을 수 없습니다. (Parent: {info.InnerParentName ?? "None"})", target);
+        }
+    }
+
+    private static void ResolveStandardBinding(MonoBehaviour target, BindInfo info)
+    {
+        // 일반 바인딩은 본인(target.transform) 하위에서 검색하고, 본인 인스턴스에 할당
+        ApplyBindRule(target, info, target.transform, target);
+    }
+
+    private static void ApplyBindRule(MonoBehaviour context, BindInfo info, Transform searchRoot, object instanceToSet)
+    {
+        // 이제 BindRule에 정상적으로 접근 가능합니다.
+        switch (info.Attribute.BindRule)
+        {
+            case BindType.Once:
+                BindOnce(context, info, searchRoot, instanceToSet);
+                break;
+            case BindType.Multi:
+                BindMulti(context, info, searchRoot, instanceToSet, false);
+                break;
+            case BindType.MultiContains:
+                BindMulti(context, info, searchRoot, instanceToSet, true);
+                break;
+        }
+    }
+
+    // ==========================================
+    // 6. Implementation Details (Once / Multi)
+    // ==========================================
+
+    private static void BindOnce(MonoBehaviour context, BindInfo info, Transform root, object instance)
+    {
+        // 이제 ObjectName, ParentName에 정상적으로 접근 가능합니다.
+        Transform foundTransform = FindTransform(root, s_sharedTransforms, info.Attribute.ObjectName, info.Attribute.ParentName);
+
+        if (foundTransform == null)
+        {
+            Debug.LogError($"[Bind] '{info.Attribute.ObjectName}'를 찾을 수 없습니다.", context);
+            return;
+        }
+
+        // 값 할당 (Assign)
+        if (info.IsList)
+        {
+            var list = CreateList(info.FieldElementType);
+            CollectChildren(foundTransform, list, info.FieldElementType, info.IsGameObject);
+            info.Field.SetValue(instance, list);
+        }
+        else if (info.IsArray)
+        {
+            var list = CreateList(info.FieldElementType);
+            CollectChildren(foundTransform, list, info.FieldElementType, info.IsGameObject);
+            info.Field.SetValue(instance, ListToArray(list, info.FieldElementType));
+        }
+        else
+        {
+            // 단일 할당
+            object value = GetValueFromTransform(foundTransform, info.FieldElementType, info.IsGameObject);
+            if (value != null) info.Field.SetValue(instance, value);
+            else Debug.LogError($"[Bind] '{foundTransform.name}'에 컴포넌트 '{info.FieldElementType.Name}'가 없습니다.", context);
+        }
+    }
+
+    private static void BindMulti(MonoBehaviour context, BindInfo info, Transform root, object instance, bool useContains)
+    {
+        List<Transform> candidates = s_sharedTransforms;
+
+        // ParentName이 있다면 그 부모가 존재하는지 먼저 확인 (단순화를 위해 여기서는 유효성 체크만)
+        if (!string.IsNullOrEmpty(info.Attribute.ParentName))
+        {
+             Transform scopeParent = FindTransform(root, s_sharedTransforms, info.Attribute.ParentName, null);
+             if(scopeParent == null) 
+             {
+                 Debug.LogError($"[Bind] Parent '{info.Attribute.ParentName}' not found.", context);
+                 return;
+             }
+        }
+
+        var list = CreateList(info.FieldElementType);
+
+        // 전체 리스트 순회하며 조건 검사
+        int count = candidates.Count;
+        for (int i = 0; i < count; i++)
+        {
+            Transform t = candidates[i];
+            if (t == root) continue; // 루트 제외
+
+            // 이름 조건 검사
+            bool nameMatch = useContains
+                ? t.name.Contains(info.Attribute.ObjectName)
+                : t.name.Equals(info.Attribute.ObjectName, StringComparison.Ordinal);
+
+            if (!nameMatch) continue;
+
+            // 부모 조건 검사 (ParentName이 있을 경우)
+            if (!string.IsNullOrEmpty(info.Attribute.ParentName))
+            {
+                if (t.parent == null || !t.parent.name.Equals(info.Attribute.ParentName, StringComparison.Ordinal))
+                    continue;
+            }
+
+            // 조건 만족 시 리스트에 추가
+            object val = GetValueFromTransform(t, info.FieldElementType, info.IsGameObject);
+            if (val != null) list.Add(val);
+        }
+
+        // 결과 할당
+        if (info.IsArray)
+        {
+            info.Field.SetValue(instance, ListToArray(list, info.FieldElementType));
+        }
+        else
+        {
+            info.Field.SetValue(instance, list);
+        }
+    }
+
+    // ==========================================
+    // 7. Helper Methods (Search & Instantiation)
+    // ==========================================
+
+    private static Transform FindTransform(Transform root, List<Transform> allTransforms, string name, string parentName)
+    {
+        if (string.IsNullOrEmpty(name)) return null;
+
+        // 1. Fast Path: 부모가 명시된 경우 (직계 자식 우선 검색)
         if (!string.IsNullOrEmpty(parentName))
         {
-            Transform parentTransform = target.transform.Find(parentName);
-            if (parentTransform != null)
-            {
-                return parentTransform.Find(objectName);
-            }
-            return null;
+            Transform p = root.Find(parentName);
+            if (p != null) return p.Find(name);
+            // 직계에서 못 찾으면 아래 루프에서 찾을 수도 있지만, 
+            // ParentName의 의미가 "직계 부모"라면 여기서 null 리턴이 맞음.
+            // 기존 로직 호환성을 위해 여기서는 단순 처리.
         }
-        
-        // 일반 검색
-        foreach (Transform t in allTransforms)
+
+        // 2. 전체 검색 (리스트 순회)
+        int count = allTransforms.Count;
+        for (int i = 0; i < count; i++)
         {
-            if (t.name.Equals(objectName, StringComparison.Ordinal))
+            Transform t = allTransforms[i];
+            if (t == root) continue;
+
+            if (t.name.Equals(name, StringComparison.Ordinal))
             {
                 return t;
             }
         }
-        
-        // 부모가 없는 경우 직접 검색
-        return target.transform.Find(objectName);
+
+        return root.Find(name);
     }
 
-    private static void BindOnceInner(MonoBehaviour target, BindInfo info, Transform innerTransform)
+    private static List<BindInfo> GetCachedBindInfos(MonoBehaviour target)
     {
-        Transform foundTransform = null;
-        
-        // 인아웃 클래스 필드의 GameObject 이름으로 찾기
-        if (!string.IsNullOrEmpty(info.Attribute.ParentName))
+        Type type = target.GetType();
+
+        if (s_typeBindInfoCache.TryGetValue(type, out List<BindInfo> infos))
         {
-            Transform parentTransform = innerTransform.Find(info.Attribute.ParentName);
-            if (parentTransform == null)
+            UpdateInnerInstances(target, infos);
+            return infos;
+        }
+
+        infos = new List<BindInfo>();
+        var fields = type.GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.FlattenHierarchy);
+
+        foreach (var field in fields)
+        {
+            // 1. 일반 Bind 처리
+            var bindAttr = field.GetCustomAttribute<Bind>(false);
+            if (bindAttr != null)
             {
-                Debug.LogError($"Bind Error (Inner Once): Could not find Parent GameObject named '{info.Attribute.ParentName}' for inner field '{info.Field.Name}' in '{target.name}'.", target);
-                return;
+                infos.Add(new BindInfo(field, bindAttr));
             }
 
-            // Parent 하위에서 ObjectName 찾기
-            foreach (Transform child in parentTransform)
+            // 2. InnerBind 처리
+            var innerAttr = field.GetCustomAttribute<InnerBind>(false);
+            if (innerAttr != null && !typeof(MonoBehaviour).IsAssignableFrom(field.FieldType))
             {
-                if (child.name.Equals(info.Attribute.ObjectName, StringComparison.Ordinal))
+                object innerObj = field.GetValue(target);
+                if (innerObj == null)
                 {
-                    foundTransform = child;
-                    break;
+                    innerObj = Activator.CreateInstance(field.FieldType);
+                    field.SetValue(target, innerObj);
                 }
-            }
-        }
-        else
-        {
-            List<Transform> allTransforms = new List<Transform>();
-            innerTransform.GetComponentsInChildren<Transform>(true, allTransforms); // Include inactive
-            allTransforms.Remove(innerTransform); // Remove self
-            
-            foundTransform = FindTransform(innerTransform, allTransforms, info.Attribute.ObjectName, null);
-        }
 
-        if (foundTransform == null)
-        {
-            Debug.LogError($"Bind Error (Inner Once): Could not find GameObject named '{info.Attribute.ObjectName}' for inner field '{info.Field.Name}' in '{target.name}'.", target);
-            return;
-        }
-
-        // 필드 타입에 따라 할당 처리
-        if (info.IsList) // List<T>
-        {
-            Type listType = typeof(List<>).MakeGenericType(info.FieldElementType);
-            System.Collections.IList list = Activator.CreateInstance(listType) as System.Collections.IList;
-
-            if (info.IsGameObject) // List<GameObject> - Get direct children GameObjects
-            {
-                foreach (Transform child in foundTransform)
+                var innerFields = field.FieldType.GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
+                foreach (var inField in innerFields)
                 {
-                    list.Add(child.gameObject);
-                }
-            }
-            else if (typeof(Component).IsAssignableFrom(info.FieldElementType)) // List<ComponentType> - Get components in children
-            {
-                Component[] components = foundTransform.GetComponentsInChildren(info.FieldElementType, true);
-                foreach (Component comp in components)
-                {
-                    list.Add(comp);
-                }
-            }
-            else
-            {
-                Debug.LogWarning($"Bind Warning (Inner Once): List field '{info.Field.Name}' requests unsupported element type '{info.FieldElementType.Name}'. Only GameObject and Component types supported for Lists.", target);
-            }
-            
-            info.Field.SetValue(info.InnerObject, list);
-        }
-        else if (info.IsArray) // T[]
-        {
-            if (info.IsGameObject) // GameObject[] - Get direct children GameObjects
-            {
-                GameObject[] children = new GameObject[foundTransform.childCount];
-                int i = 0;
-                foreach (Transform child in foundTransform)
-                {
-                    children[i++] = child.gameObject;
-                }
-                
-                info.Field.SetValue(info.InnerObject, children);
-            }
-            else if (typeof(Component).IsAssignableFrom(info.FieldElementType)) // ComponentType[] - Get components in children
-            {
-                Component[] components = foundTransform.GetComponentsInChildren(info.FieldElementType, true);
-                Array typedArray = Array.CreateInstance(info.FieldElementType, components.Length);
-                Array.Copy(components, typedArray, components.Length);
-                
-                info.Field.SetValue(info.InnerObject, typedArray);
-            }
-            else
-            {
-                Debug.LogWarning($"Bind Warning (Inner Once): Array field '{info.Field.Name}' requests unsupported element type '{info.FieldElementType.Name}'. Only GameObject and Component types supported for Arrays.", target);
-                Array emptyArray = Array.CreateInstance(info.FieldElementType, 0);
-                info.Field.SetValue(info.InnerObject, emptyArray);
-            }
-        }
-        else // Single Field (GameObject or Component)
-        {
-            if (info.IsGameObject) // GameObject
-            {
-                info.Field.SetValue(info.InnerObject, foundTransform.gameObject);
-            }
-            else if (typeof(Component).IsAssignableFrom(info.FieldElementType)) // Component
-            {
-                Component component = foundTransform.GetComponent(info.FieldElementType);
-                if (component == null)
-                {
-                    Debug.LogError($"Bind Error (Inner Once): Component of type '{info.FieldElementType.Name}' not found on GameObject '{info.Attribute.ObjectName}' for inner field '{info.Field.Name}' in '{target.name}'.", target);
-                }
-                else
-                {
-                    info.Field.SetValue(info.InnerObject, component);
-                }
-            }
-            else
-            {
-                Debug.LogError($"Bind Error (Inner Once): Field '{info.Field.Name}' is not a GameObject, Component, List, or Array type. Cannot bind.", target);
-            }
-        }
-    }
-
-    private static void BindMultiInner(MonoBehaviour target, BindInfo info, Transform innerTransform, bool useContains)
-    {
-        System.Collections.IList list = info.Field.GetValue(info.InnerObject) as System.Collections.IList;
-        
-        if (list == null)
-        {
-            Type listType = typeof(List<>).MakeGenericType(info.FieldElementType);
-            list = Activator.CreateInstance(listType) as System.Collections.IList;
-            info.Field.SetValue(info.InnerObject, list);
-        }
-        else
-        {
-            list.Clear();
-        }
-
-        List<Transform> searchScope = new List<Transform>();
-        innerTransform.GetComponentsInChildren<Transform>(true, searchScope);
-
-        // ParentName 지정 시, 해당 부모 하위만 대상으로
-        if (!string.IsNullOrEmpty(info.Attribute.ParentName))
-        {
-            Transform parentTransform = innerTransform.Find(info.Attribute.ParentName);
-            if (parentTransform == null)
-            {
-                Debug.LogError($"Bind Error (Inner Multi): Could not find Parent GameObject named '{info.Attribute.ParentName}' for inner field '{info.Field.Name}' in '{target.name}'.", target);
-                return;
-            }
-
-            // parentTransform 포함 안 하고 하위만
-            searchScope.Clear();
-            parentTransform.GetComponentsInChildren<Transform>(true, searchScope);
-            searchScope.Remove(parentTransform);
-        }
-
-        foreach (Transform t in searchScope)
-        {
-            bool nameMatch = useContains
-                ? t.name.Contains(info.Attribute.ObjectName)
-                : t.name.Equals(info.Attribute.ObjectName, StringComparison.Ordinal);
-
-            if (nameMatch)
-            {
-                if (info.IsGameObject)
-                {
-                    list.Add(t.gameObject);
-                }
-                else if (typeof(Component).IsAssignableFrom(info.FieldElementType))
-                {
-                    Component component = t.GetComponent(info.FieldElementType);
-                    if (component != null)
+                    var inBindAttr = inField.GetCustomAttribute<Bind>(false);
+                    if (inBindAttr != null)
                     {
-                        list.Add(component);
+                        var info = new BindInfo(inField, inBindAttr)
+                        {
+                            ParentField = field,
+                            InnerObjectName = innerAttr.ObjectName,
+                            InnerParentName = innerAttr.ParentName,
+                            InnerInstance = innerObj
+                        };
+                        infos.Add(info);
                     }
                 }
             }
         }
 
-        if (info.IsArray)
-        {
-            Array array = Array.CreateInstance(info.FieldElementType, list.Count);
-            list.CopyTo(array, 0);
-            info.Field.SetValue(info.InnerObject, array);
-        }
+        s_typeBindInfoCache[type] = infos;
+        return infos;
     }
 
-
-    // --- Binding Implementations ---
-    // 내부 헬퍼 메서드 이름은 그대로 사용
-    private static void BindOnce(MonoBehaviour target, BindInfo info, List<Transform> allTransforms)
+    private static void UpdateInnerInstances(MonoBehaviour target, List<BindInfo> infos)
     {
-        Transform foundTransform = null;
-        // Find the first transform matching the name
-        if (!string.IsNullOrEmpty(info.Attribute.ParentName))
+        foreach (var info in infos)
         {
-            // Parent Transform 찾기
-            //Transform parentTransform = allTransforms.FirstOrDefault(t => t.name.Equals(info.Attribute.ParentName, StringComparison.Ordinal));
-            Transform parentTransform = target.transform.Find(info.Attribute.ParentName);
-            if (parentTransform == null)
+            if (info.ParentField != null)
             {
-                Debug.LogError($"Bind Error (Once): Could not find Parent GameObject named '{info.Attribute.ParentName}' for field '{info.Field.Name}' in '{target.name}'.", target);
-                return;
-            }
-
-            // Parent 하위에서 ObjectName 찾기
-            foundTransform = parentTransform.GetComponentsInChildren<Transform>(true)
-                .FirstOrDefault(t => t != parentTransform && t.name.Equals(info.Attribute.ObjectName, StringComparison.Ordinal));
-        }
-        else
-        {
-            foreach (Transform t in allTransforms)
-            {
-                if (t.name.Equals(info.Attribute.ObjectName, StringComparison.Ordinal))
+                object innerObj = info.ParentField.GetValue(target);
+                if (innerObj == null)
                 {
-                    foundTransform = t;
-                    break;
+                    innerObj = Activator.CreateInstance(info.ParentField.FieldType);
+                    info.ParentField.SetValue(target, innerObj);
                 }
-            }
-        }
-
-        if (foundTransform == null)
-        {
-            Debug.LogError($"Bind Error (Once): Could not find GameObject named '{info.Attribute.ObjectName}' for field '{info.Field.Name}' in '{target.name}'.", target);
-            return;
-        }
-
-        // --- Assign based on Field Type ---
-        if (info.IsList) // List<T>
-        {
-            Type listType = typeof(List<>).MakeGenericType(info.FieldElementType);
-            System.Collections.IList list = Activator.CreateInstance(listType) as System.Collections.IList;
-
-            if (info.IsGameObject) // List<GameObject> - Get direct children GameObjects
-            {
-                foreach (Transform child in foundTransform) // Iterate direct children
-                {
-                    list.Add(child.gameObject);
-                }
-            }
-            else if (typeof(Component).IsAssignableFrom(info.FieldElementType)) // List<ComponentType> - Get components in children
-            {
-                Component[] components = foundTransform.GetComponentsInChildren(info.FieldElementType, true);
-                foreach (Component comp in components)
-                {
-                    list.Add(comp);
-                }
-            }
-            else
-            {
-                Debug.LogWarning($"Bind Warning (Once): List field '{info.Field.Name}' requests unsupported element type '{info.FieldElementType.Name}'. Only GameObject and Component types supported for Lists.", target);
-            }
-            info.Field.SetValue(target, list);
-        }
-        else if (info.IsArray) // T[]
-        {
-            if (info.IsGameObject) // GameObject[] - Get direct children GameObjects
-            {
-                GameObject[] children = new GameObject[foundTransform.childCount];
-                int i = 0;
-                foreach (Transform child in foundTransform)
-                {
-                    children[i++] = child.gameObject;
-                }
-                info.Field.SetValue(target, children);
-            }
-            else if (typeof(Component).IsAssignableFrom(info.FieldElementType)) // ComponentType[] - Get components in children
-            {
-                Component[] components = foundTransform.GetComponentsInChildren(info.FieldElementType, true);
-                Array typedArray = Array.CreateInstance(info.FieldElementType, components.Length);
-                Array.Copy(components, typedArray, components.Length);
-                info.Field.SetValue(target, typedArray);
-            }
-            else
-            {
-                Debug.LogWarning($"Bind Warning (Once): Array field '{info.Field.Name}' requests unsupported element type '{info.FieldElementType.Name}'. Only GameObject and Component types supported for Arrays.", target);
-                info.Field.SetValue(target, Array.CreateInstance(info.FieldElementType, 0)); // Set empty array
-            }
-        }
-        else // Single Field (GameObject or Component)
-        {
-            if (info.IsGameObject) // GameObject
-            {
-                info.Field.SetValue(target, foundTransform.gameObject);
-            }
-            else if (typeof(Component).IsAssignableFrom(info.FieldElementType)) // Component
-            {
-                Component component = foundTransform.GetComponent(info.FieldElementType);
-                if (component == null)
-                {
-                    Debug.LogError($"Bind Error (Once): Component of type '{info.FieldElementType.Name}' not found on GameObject '{info.Attribute.ObjectName}' for field '{info.Field.Name}' in '{target.name}'.", target);
-                }
-                else
-                {
-                    info.Field.SetValue(target, component);
-                }
-            }
-            else
-            {
-                Debug.LogError($"Bind Error (Once): Field '{info.Field.Name}' is not a GameObject, Component, List, or Array type. Cannot bind.", target);
+                info.InnerInstance = innerObj;
             }
         }
     }
 
-    private static void BindMulti(MonoBehaviour target, BindInfo info, List<Transform> allTransforms, bool useContains)
+    // ==========================================
+    // 8. Utility Methods (Collection Helpers)
+    // ==========================================
+
+    private static IList CreateList(Type elementType)
     {
-        System.Collections.IList list = info.Field.GetValue(target) as System.Collections.IList;
-        if (list == null)
+        Type listType = typeof(List<>).MakeGenericType(elementType);
+        return (IList)Activator.CreateInstance(listType);
+    }
+
+    private static Array ListToArray(IList list, Type elementType)
+    {
+        Array array = Array.CreateInstance(elementType, list.Count);
+        list.CopyTo(array, 0);
+        return array;
+    }
+
+    private static object GetValueFromTransform(Transform t, Type type, bool isGameObject)
+    {
+        if (isGameObject) return t.gameObject;
+        return t.GetComponent(type);
+    }
+
+    private static void CollectChildren(Transform parent, IList list, Type type, bool isGameObject)
+    {
+        if (isGameObject)
         {
-            Type listType = typeof(List<>).MakeGenericType(info.FieldElementType);
-            list = Activator.CreateInstance(listType) as System.Collections.IList;
-            info.Field.SetValue(target, list);
+            foreach (Transform child in parent)
+            {
+                list.Add(child.gameObject);
+            }
         }
         else
         {
-            list.Clear();
-        }
-
-        IEnumerable<Transform> searchScope = allTransforms;
-
-        // ParentName 지정 시, 해당 부모 하위만 대상으로
-        if (!string.IsNullOrEmpty(info.Attribute.ParentName))
-        {
-            //Transform parentTransform = allTransforms.FirstOrDefault(t => t.name.Equals(info.Attribute.ParentName, StringComparison.Ordinal));
-            Transform parentTransform = target.transform.Find(info.Attribute.ParentName);
-            if (parentTransform == null)
+            var components = parent.GetComponentsInChildren(type, true);
+            foreach (var comp in components)
             {
-                Debug.LogError($"Bind Error (Multi): Could not find Parent GameObject named '{info.Attribute.ParentName}' for field '{info.Field.Name}' in '{target.name}'.", target);
-                return;
-            }
-
-            // parentTransform 포함 안 하고 하위만
-            searchScope = parentTransform.GetComponentsInChildren<Transform>(true).Where(t => t != parentTransform);
-        }
-
-        foreach (Transform t in searchScope)
-        {
-            bool nameMatch = useContains
-                ? t.name.Contains(info.Attribute.ObjectName)
-                : t.name.Equals(info.Attribute.ObjectName, StringComparison.Ordinal);
-
-            if (nameMatch)
-            {
-                if (info.IsGameObject)
-                {
-                    list.Add(t.gameObject);
-                }
-                else if (typeof(Component).IsAssignableFrom(info.FieldElementType))
-                {
-                    Component component = t.GetComponent(info.FieldElementType);
-                    if (component != null)
-                    {
-                        list.Add(component);
-                    }
-                    // Optional: Warn if component is missing
-                    // else { Debug.LogWarning($"Bind (Multi): GameObject '{t.name}' matched but lacks component '{info.FieldElementType.Name}'.", target); }
-                }
-            }
-        }
-
-        if (info.IsArray)
-        {
-            Array array = Array.CreateInstance(info.FieldElementType, list.Count);
-            list.CopyTo(array, 0);
-            if (info.InnerObject != null)
-            {
-                info.Field.SetValue(info.InnerObject, array);
-            }
-            else
-            {
-                info.Field.SetValue(target, array);
+                list.Add(comp);
             }
         }
     }
