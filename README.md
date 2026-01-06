@@ -9,4 +9,6 @@ MVVM 디자인 패턴을 이용한 UI Framework 스터디.
 
 에셋은 https://kenney.nl/assets 무료 에셋 사용.
 
+현재 유니티 버전 : 6.3.1LTS
+
 
