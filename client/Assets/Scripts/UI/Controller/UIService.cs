@@ -1,7 +1,7 @@
 using Cysharp.Threading.Tasks;
 using UnityEngine;
 
-public class UIManager : MonoBehaviour
+public class UIService : MonoBehaviour
 {
     private PageController _pageController;
     private PopupController _popupController;

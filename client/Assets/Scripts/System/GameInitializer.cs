@@ -3,8 +3,8 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 public class GameInitializer : MonoBehaviour
 {
-    [SerializeField][Bind("CanvasManager")] CanvasManager _canvasManager;
-    [SerializeField][Bind("UIManager")] UIManager _uiManager;
+    [SerializeField][Bind("CanvasManager")] CanvasService _canvasManager;
+    [SerializeField][Bind("UIManager")] UIService _uiManager;
     [SerializeField][Bind("AssetLoader")]  AssetLoader _assetLoader;
 
     private void Reset()
@@ -21,6 +21,6 @@ public class GameInitializer : MonoBehaviour
 
     async UniTask Start()
     {
-        SceneManager.LoadSceneAsync("MainScene", LoadSceneMode.Additive);
+        await SceneManager.LoadSceneAsync("MainScene", LoadSceneMode.Additive);
     }
 }

@@ -38,7 +38,7 @@ public class ToastController : UI_ControllerBase
     {
         _isShowingToast = true;
 
-        var canvas = _canvasManager.GetCanvas(CanvasManager.ECanvasType.Overlay);
+        var canvas = _canvasManager.GetCanvas(CanvasService.ECanvasType.Overlay);
 
         while (_toastQueue.Count > 0)
         { 

@@ -11,7 +11,7 @@ public class PlayerCarController : MonoBehaviour
     private PlayerInfoModel _playerInfo = new PlayerInfoModel();
     private PlayerInfoViewModel _playerInfoViewModel = null;
     
-    private UIManager _uiManager;
+    private UIService _uiManager;
     
     //public GameObject gameOverScreen;
     //public Button restartButton;
@@ -93,7 +93,7 @@ public class PlayerCarController : MonoBehaviour
         
         _playerInfo.OnNirtoBoost += ActivateNitroBoost;
 
-        _uiManager = ServiceLocator.Get<UIManager>();
+        _uiManager = ServiceLocator.Get<UIService>();
         
         _playerInfoViewModel = new PlayerInfoViewModel(_playerInfo);
         await _uiManager.ShowPage<PlayerInfoViewModel>(_playerInfoViewModel);

@@ -12,7 +12,7 @@ public abstract class View_Base<T> : MonoBehaviour where T : ViewModel_Base
     public T ViewModel { get; protected set; }
 
     /// <summary>
-    /// UIManager가 ViewModel을 주입(Inject)하고 View를 초기화하기 위해 호출합니다.
+    /// UIService가 ViewModel을 주입(Inject)하고 View를 초기화하기 위해 호출합니다.
     /// </summary>
     /// <param name="viewModel">이 View와 연결될 ViewModel</param>
     public void Initialize(T viewModel)

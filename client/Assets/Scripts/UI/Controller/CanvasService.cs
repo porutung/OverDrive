@@ -3,10 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 
-/// <summary>
-/// UI가 생성될 Canvas들을 관리합니다.
-/// </summary>
-public class CanvasManager : MonoBehaviour
+public class CanvasService : MonoBehaviour
 {
     // Canvas 타입을 정의하는 Enum
     public enum ECanvasType

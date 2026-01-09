@@ -9,12 +9,12 @@ public abstract class UI_ControllerBase : MonoBehaviour
     // 경로를 캐싱하기 위한 딕셔너리는 그대로 사용
     private readonly Dictionary<Type, string> _uiPrefabPathsCache = new Dictionary<Type, string>();
 
-    protected CanvasManager _canvasManager;
+    protected CanvasService _canvasManager;
     protected AssetLoader _assetLoader;
 
     protected virtual void Start()
     {
-        _canvasManager = ServiceLocator.Get<CanvasManager>();
+        _canvasManager = ServiceLocator.Get<CanvasService>();
         _assetLoader = ServiceLocator.Get<AssetLoader>();
     }
 

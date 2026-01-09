@@ -11,7 +11,7 @@ public class PopupController : UI_ControllerBase
 
     public override async UniTask<T> Show<T>() 
     {
-        var canvas = _canvasManager.GetCanvas(CanvasManager.ECanvasType.Overlay);
+        var canvas = _canvasManager.GetCanvas(CanvasService.ECanvasType.Overlay);
         var view = await CreateView<T>(canvas.transform);
 
         if (view == null) 
@@ -30,7 +30,7 @@ public class PopupController : UI_ControllerBase
 
     public override async UniTask<T> Show<T>(T viewModel)
     {
-        var canvas = _canvasManager.GetCanvas(CanvasManager.ECanvasType.Overlay);
+        var canvas = _canvasManager.GetCanvas(CanvasService.ECanvasType.Overlay);
         var view = await CreateView<T>(viewModel, canvas.transform);
 
         if (view == null) 

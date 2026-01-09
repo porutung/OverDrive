@@ -14,7 +14,7 @@ public class PageController : UI_ControllerBase
             _currentPage = null;
         }
         
-        var canvas = _canvasManager.GetCanvas(CanvasManager.ECanvasType.Overlay);
+        var canvas = _canvasManager.GetCanvas(CanvasService.ECanvasType.Overlay);
         var view = await CreateView<T>(canvas.transform);
 
         if (view == null) 
@@ -43,7 +43,7 @@ public class PageController : UI_ControllerBase
             _currentPage = null;
         }
         
-        var canvas = _canvasManager.GetCanvas(CanvasManager.ECanvasType.Overlay);
+        var canvas = _canvasManager.GetCanvas(CanvasService.ECanvasType.Overlay);
         var view = await CreateView(viewModel, canvas.transform);
 
         if (view == null) 
