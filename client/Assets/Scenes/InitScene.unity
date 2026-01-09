@@ -133,7 +133,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 3306991860700703956, guid: 3436827fb489c794988d4f110e21b4ef, type: 3}
       propertyPath: m_Name
-      value: CanvasManager
+      value: CanvasService
       objectReference: {fileID: 0}
     - target: {fileID: 8057436970593067505, guid: 3436827fb489c794988d4f110e21b4ef, type: 3}
       propertyPath: m_Pivot.x
@@ -220,17 +220,6 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 3436827fb489c794988d4f110e21b4ef, type: 3}
---- !u!114 &277568828 stripped
-MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 2017410563518942559, guid: 3436827fb489c794988d4f110e21b4ef, type: 3}
-  m_PrefabInstance: {fileID: 277568827}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: b1e75881f6c402f49a4801303de93f74, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!224 &277568829 stripped
 RectTransform:
   m_CorrespondingSourceObject: {fileID: 8057436970593067505, guid: 3436827fb489c794988d4f110e21b4ef, type: 3}
@@ -250,7 +239,7 @@ GameObject:
   - component: {fileID: 672333496}
   - component: {fileID: 672333495}
   m_Layer: 0
-  m_Name: UIManager
+  m_Name: UIService
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -268,6 +257,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f5e188b0a5cf4bc4398e8e42948e8a2a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  _pageController: {fileID: 0}
+  _popupController: {fileID: 0}
+  _toastController: {fileID: 0}
 --- !u!114 &672333495
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -312,6 +304,37 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 672333493}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 2021412757}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1055253714
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1055253715}
+  m_Layer: 0
+  m_Name: SceneLoadService
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1055253715
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1055253714}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
@@ -393,7 +416,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8ec01383a5e3550428840d9a76f21dff, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _canvasManager: {fileID: 277568828}
+  _canvasManager: {fileID: 0}
   _uiManager: {fileID: 672333494}
   _assetLoader: {fileID: 1375820905}
 --- !u!4 &2021412757
@@ -412,6 +435,7 @@ Transform:
   - {fileID: 277568829}
   - {fileID: 1375820906}
   - {fileID: 672333498}
+  - {fileID: 1055253715}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1660057539 &9223372036854775807

@@ -9,9 +9,9 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 8057436970593067505}
-  - component: {fileID: 2017410563518942559}
+  - component: {fileID: 4280026314471574702}
   m_Layer: 0
-  m_Name: CanvasManager
+  m_Name: CanvasService
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -40,7 +40,7 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 100, y: 100}
   m_Pivot: {x: 0.5, y: 0.5}
---- !u!114 &2017410563518942559
+--- !u!114 &4280026314471574702
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -49,15 +49,15 @@ MonoBehaviour:
   m_GameObject: {fileID: 3306991860700703956}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: b1e75881f6c402f49a4801303de93f74, type: 3}
+  m_Script: {fileID: 11500000, guid: b2321e4936447414f94384061bb6785c, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: 
+  m_EditorClassIdentifier: Assembly-CSharp::CanvasService
   _canvasMappings:
   - Type: 0
     Canvas: {fileID: 2164059335091764356}
-  - Type: 2
-    Canvas: {fileID: 7215187629920374363}
   - Type: 1
+    Canvas: {fileID: 7215187629920374363}
+  - Type: 2
     Canvas: {fileID: 6073357474025758883}
 --- !u!1 &6247327270587006490
 GameObject:
