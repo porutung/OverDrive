@@ -1,16 +1,14 @@
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class SceneLoadService : MonoBehaviour
 {
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
-    void Start()
+    // 다음으로 이동할 씬 이름을 저장할 정적 변수
+    public static string NextSceneName { get; private set; }
+    private const string LOADING_SCENE_NAME = "LoadingScene";
+    public void LoadScene(string sceneName)
     {
-        
-    }
-
-    // Update is called once per frame
-    void Update()
-    {
-        
+        NextSceneName = sceneName;
+        SceneManager.LoadScene(LOADING_SCENE_NAME);
     }
 }
