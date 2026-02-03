@@ -21,6 +21,7 @@ public class CameraService : MonoBehaviour
 
     private List<OverlayCameraData> _overlayCameras = new List<OverlayCameraData>();
     
+    
     //[등록] 오버레이 카메라가 생성될 때 호출
     public void RegisterOverlayCamera(RegistOverlayCamera script, Camera cam)
     {
@@ -58,5 +59,8 @@ public class CameraService : MonoBehaviour
                 cameraData.cameraStack.Add(info.camera);
             }
         }
+        
+        
+        
     }
 }

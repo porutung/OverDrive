@@ -48,4 +48,22 @@ public class CanvasService : MonoBehaviour
         Debug.LogError($"[CanvasManager] Canvas of type {type} not found!");
         return null;
     }
+
+    public Canvas GetCanvasComponent(ECanvasType type)
+    {
+        return _canvasMappings.Find(x => x.Type == type).Canvas;
+    }
+
+    public void SetWorldCarmera(Camera baseCamera)
+    {
+        Canvas worldCanvas = GetCanvasComponent(ECanvasType.World);
+        if (worldCanvas != null)
+        {
+            worldCanvas.worldCamera = baseCamera;    
+        }
+        else
+        {
+            Debug.LogError("$[CanvasSerivce] World UI Canvas not found!");
+        }
+    }
 }
