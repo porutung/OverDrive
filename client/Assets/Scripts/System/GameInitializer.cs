@@ -34,7 +34,6 @@ public class GameInitializer : MonoBehaviour
         // 3. 프리팹 생성 및 파괴 방지 설정
         var instance = Instantiate(prefab);
         instance.name = "[System] GameInitializer"; // 이름 깔끔하게
-        DontDestroyOnLoad(instance.gameObject);
         
         // 4. (선택사항) 여기서 강제로 Awake 로직이 돌게 되지만, 
         // 확실하게 하기 위해 초기화 함수가 있다면 호출해 줄 수도 있습니다.
@@ -46,6 +45,8 @@ public class GameInitializer : MonoBehaviour
         ServiceLocator.Register(_assetLoader);
         ServiceLocator.Register(_sceneLoadService);
         ServiceLocator.Register(_cameraService);        
+        
+        DontDestroyOnLoad(gameObject);
     }
 
     void Start()
