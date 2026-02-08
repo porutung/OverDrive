@@ -35,6 +35,7 @@ Transform:
   - {fileID: 2285898145886071381}
   - {fileID: 7942374143760633230}
   - {fileID: 4601746867848930143}
+  - {fileID: 4074768881851000933}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &1262208380000033204
@@ -54,6 +55,7 @@ MonoBehaviour:
   _assetLoader: {fileID: 4502006905842195064}
   _sceneLoadService: {fileID: 1288630846139340485}
   _cameraService: {fileID: 8966729089933584650}
+  _poolService: {fileID: 5841908502602107936}
 --- !u!1 &2596233565884644520
 GameObject:
   m_ObjectHideFlags: 0
@@ -98,6 +100,53 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ff9f8c4c2ad1bcb4fa02933aecebd408, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SceneLoadService
+--- !u!1 &5868299265667988620
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 4074768881851000933}
+  - component: {fileID: 5841908502602107936}
+  m_Layer: 0
+  m_Name: PoolService
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &4074768881851000933
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5868299265667988620}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 9046486211097248510}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &5841908502602107936
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5868299265667988620}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: cce97249ef4c60a498e4affae816d6d7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PoolService
+  _collectionCheck: 1
+  _defaultCapacity: 10
+  _maxSize: 100
 --- !u!1 &6323162232530529172
 GameObject:
   m_ObjectHideFlags: 0

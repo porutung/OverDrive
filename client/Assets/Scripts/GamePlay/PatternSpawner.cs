@@ -26,9 +26,11 @@ public class PatternSpawner : MonoBehaviour
     [SerializeField] private float fuelSpawnInterval = 70f;
     
     private float accumWaitTime = 0f;
+    private PoolService _poolService;
     // -------------------------
     void Start()
     {
+        _poolService = ServiceLocator.Get<PoolService>(); 
         StartCoroutine(SpawnPatternRoutine());
     }
 
@@ -81,7 +83,9 @@ public class PatternSpawner : MonoBehaviour
             Vector3 spawnPosition = new Vector3(laneXPositions[spawnEvent.laneIndex], 0.0f, spawnZPosition);
 
             // 차량 생성 (오브젝트 풀링을 사용한다면 여기서 GetFromPool 호출)
-            GameObject spawnedCar = Instantiate(spawnEvent.carPrefab, spawnPosition, Quaternion.identity);
+            //GameObject spawnedCar = Instantiate(spawnEvent.carPrefab, spawnPosition, Quaternion.identity);
+            GameObject spawnedCar = _poolService.Get(spawnEvent.carPrefab);
+            spawnedCar.transform.position = spawnPosition;
             
             
             var otherCar = spawnedCar.GetComponent<OtherCar>();

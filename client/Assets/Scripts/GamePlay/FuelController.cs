@@ -9,7 +9,15 @@ public class FuelController : MonoBehaviour
     [SerializeField] float addFuelAmount = 10f;
 
     public float AddFuelAmount { get{ return  addFuelAmount; } }    
-    
+
+    private PoolService _poolService;
+    private PoolObject _poolObject;
+
+    void Start()
+    {
+        _poolService = ServiceLocator.Get<PoolService>();
+        _poolObject = GetComponent<PoolObject>();
+    }
     void Update()
     {
         // Y축(Vector3.up)을 기준으로 초당 rotationSpeed만큼 회전시킵니다.
@@ -27,7 +35,7 @@ public class FuelController : MonoBehaviour
                 // 플레이어의 연료를 채워주는 함수 호출
                 player.AddFuel(addFuelAmount);
                 // 아이템 파괴
-                Destroy(gameObject);
+                _poolObject.ReturnToPool();
             }
         }
     }

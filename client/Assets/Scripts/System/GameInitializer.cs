@@ -10,6 +10,8 @@ public class GameInitializer : MonoBehaviour
     [SerializeField][Bind("AssetLoader")]  AssetLoader _assetLoader;
     [SerializeField][Bind("SceneLoadService")] SceneLoadService _sceneLoadService;
     [SerializeField][Bind("CameraService")] CameraService _cameraService;
+    [SerializeField][Bind("PoolService")] PoolService _poolService;
+    
     private void Reset()
     {
         Bind.DoUpdate(this);    
@@ -45,6 +47,7 @@ public class GameInitializer : MonoBehaviour
         ServiceLocator.Register(_assetLoader);
         ServiceLocator.Register(_sceneLoadService);
         ServiceLocator.Register(_cameraService);        
+        ServiceLocator.Register(_poolService);
         
         DontDestroyOnLoad(gameObject);
     }

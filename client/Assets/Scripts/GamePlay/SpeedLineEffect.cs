@@ -15,7 +15,12 @@ public class SpeedLineEffect : MonoBehaviour
     [SerializeField] private float spawnRadius = 3f;
 
     private Coroutine _spawnCoroutine;
+    private PoolService _poolService;
 
+    void Start()
+    {
+        _poolService = ServiceLocator.Get<PoolService>();
+    }
     void Update()
     {
         // PlayerCarController에서 부스트 상태를 가져오는 public 메서드가 필요합니다.
@@ -37,7 +42,7 @@ public class SpeedLineEffect : MonoBehaviour
         while (true)
         {
             // 1. 속도선 프리팹을 월드 공간에 생성
-            GameObject lineObj = Instantiate(speedLinePrefab);
+            GameObject lineObj = _poolService.Get(speedLinePrefab);
             LineRenderer line = lineObj.GetComponent<LineRenderer>();
 
             // 2. 차 주변의 랜덤한 원통형 위치 결정
@@ -77,6 +82,6 @@ public class SpeedLineEffect : MonoBehaviour
         }
         
         // 애니메이션이 끝나면 오브젝트 파괴
-        Destroy(lineTransform.gameObject);
+        lineTransform.GetComponent<PoolObject>().ReturnToPool();
     }
 }

@@ -127,6 +127,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 1262208380000033204, guid: b67244a617d48714e9a4f7a5b21cd202, type: 3}
+      propertyPath: _poolService
+      value: 
+      objectReference: {fileID: 4669805701894043279}
     - target: {fileID: 1489020454380944186, guid: b67244a617d48714e9a4f7a5b21cd202, type: 3}
       propertyPath: m_Name
       value: ServiceLocator
@@ -176,6 +180,17 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: b67244a617d48714e9a4f7a5b21cd202, type: 3}
+--- !u!114 &4669805701894043279 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 5841908502602107936, guid: b67244a617d48714e9a4f7a5b21cd202, type: 3}
+  m_PrefabInstance: {fileID: 4669805701894043278}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: cce97249ef4c60a498e4affae816d6d7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PoolService
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
